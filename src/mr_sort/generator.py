@@ -33,7 +33,7 @@ class Generator():
         Renvoie les paramètres de génération des données
         :return: {"nb_grades": le nombre de paramètres (notes), "max_grade": la note maximale à générer, "border": les notes limites pour être évaluées positivement, "poids": les poids associés aux différentes notes, "lam": le critère l'acceptation de l'entrée}
         """
-        return {"nb_grades": self.nb_grades, "max_grade": self.max_grade, "border": self.border, "poids": self.poids, "lam": self.lam}
+        return {"nb_grades": self.nb_grades, "max_grade": self.max_grade, "border": np.array(self.border), "poids": np.array(self.poids), "lam": self.lam}
 
     def random_parameters(self):
         """
