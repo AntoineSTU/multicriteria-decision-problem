@@ -1,44 +1,117 @@
 from nptyping import NDArray
-import gurobipy
+import gurobipy as gp
 import numpy as np
 
-class MRSort_Solver:
-    def __init__(self, nb_courses: int, nb_accepted: int, nb_refused) -> None:
+
+class Solver:
+    def __init__(self, nb_courses: int, nb_accepted: int, nb_refused: int) -> None:
         assert nb_courses >= 1
-        self.model = gurobipy.Model("MR sort")
+        self.nb_courses = nb_courses
+        self.nb_accepted = nb_accepted
+        self.nb_refused = nb_refused
+
+        self.model = gp.Model("MR sort")
 
         self.weights = self.model.addMVar(shape=nb_courses)
-        self.weights_s_acc = self.model.addMVar(shape=(nb_courses, nb_accepted))
-        self.weights_s_ref = self.model.addMVar(shape=(nb_courses, nb_refused))
+        self.weights_s_acc = self.model.addMVar(
+            shape=(nb_courses, nb_accepted), vtype=gp.GRB.CONTINUOUS
+        )
+        self.weights_s_ref = self.model.addMVar(
+            shape=(nb_courses, nb_refused), vtype=gp.GRB.CONTINUOUS
+        )
 
-        self.frontier = self.model.addMVar(shape=nb_courses - 1)
+        self.boundary = self.model.addMVar(shape=nb_courses)
         self.lamb = self.model.addVar()
-        self.delta_acc = self.model.addMVar(shape=(nb_courses, nb_accepted), vtype=GRB.BOOL)
-        self.delta_ref = self.model.addMVar(shape=(nb_courses, nb_refused), vtype=GRB.BOOL)
-
+        self.delta_acc = self.model.addMVar(
+            shape=(nb_courses, nb_accepted), vtype=gp.GRB.BINARY
+        )
+        self.delta_ref = self.model.addMVar(
+            shape=(nb_courses, nb_refused), vtype=gp.GRB.BINARY
+        )
         self.model.update()
 
-    def solve(self, accepted_students: NDArray[float], refused_students: NDArray[float]):
-        nb_accepted = len(accepted_students)
-        nb_refused = len(refused_students)
+    def solve(
+        self, accepted_students: NDArray[float], refused_students: NDArray[float]
+    ):
 
-        lamb_acc = np.stack([self.lamb] * nb_accepted, axis=0)
-        lamb_ref = np.stack([self.lamb] * nb_refused, axis=0)
+        lamb_ref = np.stack(np.array([self.lamb] * self.nb_refused), axis=0)
 
-        self.model.addConstr(np.sum(self.weights_s, axis=0) >= lamb_acc)
-        self.model.addConstr(np.sum(self.weights_s, axis= 0) < lamb_ref)
+        self.model.addConstr(gp.quicksum(weight for weight in self.weights) == 1)
 
-        self.model.addConstr(np.sum(self.weights) == 1)
+        for student_i in range(self.nb_accepted):
+            self.model.addConstr(
+                gp.quicksum(
+                    self.weights_s_acc[i, student_i] for i in range(self.nb_courses)
+                )
+                >= self.lamb,
+                name="constraint on accepted students",
+            )
+        for student_i in range(self.nb_refused):
+            self.model.addConstr(
+                gp.quicksum(
+                    self.weights_s_ref[i, student_i] for i in range(self.nb_courses)
+                )
+                <= self.lamb,  # < strict is not supported with gurobi
+                name="constraint on refused students",
+            )
 
         M = 100
-        M_acc = np.stack([M] * nb_accepted, axis=0)
-        M_ref = np.stack([M] * nb_refused, axis=0)
 
-        self.model.addConstr(M_acc * (self.delta_acc - np.ones(shape=()) <= accepted_students - self.frontier < M_acc * self.delta_acc))
-        self.model.addConstr(M_ref * (self.delta_ref - np.ones(shape=()) <= refused_students - self.frontier < M_ref * self.delta_ref))
+        self.model.addConstrs(
+            (
+                M * (self.delta_acc[course, student] - 1)
+                <= accepted_students[student, course] - self.boundary[course]
+            )
+            for course in range(self.nb_courses)
+            for student in range(self.nb_accepted)
+        )
 
-        weights_acc = np.stack([self.weights] * nb_accepted, axis=0)
-        weights_ref = np.stack([self.weights] * nb_refused, axis=0)
-        self.model.addConstr(weights_acc >= self.weights_s_acc >= 0)
-        self.model.addConstr(weights_ref >= self.weights_s_ref)
+        self.model.addConstrs(
+            (
+                accepted_students[student, course] - self.boundary[course]
+                <= M * self.delta_acc[course, student]
+            )
+            for course in range(self.nb_courses)
+            for student in range(self.nb_accepted)
+        )
+
+        self.model.addConstrs(
+            (
+                M * (self.delta_acc[course, student] - 1)
+                <= refused_students[student, course] - self.boundary[course]
+            )
+            for course in range(self.nb_courses)
+            for student in range(self.nb_refused)
+        )
+
+        self.model.addConstrs(
+            (
+                refused_students[student, course] - self.boundary[course]
+                <= M * self.delta_acc[course, student]
+            )
+            for course in range(self.nb_courses)
+            for student in range(self.nb_refused)
+        )
+
+        self.model.addConstrs(
+            (self.weights[course] >= self.weights_s_acc[course, student])
+            for course in range(self.nb_courses)
+            for student in range(self.nb_accepted)
+        )
+        self.model.addConstrs(
+            (self.weights_s_acc[course, student] >= 0)
+            for course in range(self.nb_courses)
+            for student in range(self.nb_accepted)
+        )
+        self.model.addConstrs(
+            (self.weights[course] >= self.weights_s_ref[course, student])
+            for course in range(self.nb_courses)
+            for student in range(self.nb_refused)
+        )
+        self.model.addConstrs(
+            (self.weights_s_ref[course, student] >= 0)
+            for course in range(self.nb_courses)
+            for student in range(self.nb_refused)
+        )
+        # self.model.addConstr(weights_ref >= self.weights_s_ref)
         # Goal function
