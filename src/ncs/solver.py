@@ -12,6 +12,7 @@ class Solver:
         :param nb_grades: le nombre de notes différentes (matières)
         :param max_grade: la note maximale
         """
+        self.max_grade = max_grade
         self.Categories = list(range(1, nb_categories + 1))  # Les mentions
         self.Criteria = list(range(1, nb_grades + 1))  # Les matières
         self.Possible_grades = list(range(max_grade + 1))  # Les notes
@@ -118,15 +119,18 @@ class Solver:
         if not res[0]:
             return None
         res_vars = {i2v[abs(v)]: v > 0 for v in res[1] if v != 0}
-        border = [20 for _ in self.Criteria]
+        border = [[self.max_grade for _ in self.Criteria] for _ in self.Categories]
         for var, var_val in res_vars.items():
             if var[0] == "x" and var_val:
-                border[var[1][0] - 1] = min(border[var[1][0] - 1], var[1][2])
+                # Rappel: x sous la forme ("x", (critère, catégorie, note))
+                border[var[1][1] - 1][var[1][0] - 1] = min(
+                    border[var[1][1] - 1][var[1][0] - 1], var[1][2]
+                )
         valid_set = []
         for var, var_val in res_vars.items():
             if var[0] == "y" and var_val:
                 valid_set.append(var[1])
-        return {"border": border, "valid_set": valid_set}
+        return {"borders": border, "valid_set": valid_set}
 
     def __clauses_to_dimacs(clauses: List[List[int]], numvar: int) -> str:
         """

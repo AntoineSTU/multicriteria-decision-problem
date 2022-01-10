@@ -3,6 +3,7 @@ import numpy as np
 import random as rd
 from math import floor
 from itertools import combinations, chain
+from src.ncs.classifier import Classifier
 
 
 class Generator:
@@ -15,35 +16,37 @@ class Generator:
 
     def reset_parameters(
         self,
-        nb_grades: int = 4,
         max_grade: float = 20,
-        border: List[int] = [12, 12, 12, 12],
-        valid_set: List[List[int]] = [[1, 3], [2, 4]],
+        borders: List[List[int]] = [[12, 12, 12, 12, 12]],
+        valid_set: List[List[int]] = [[1, 3], [2, 4], [1, 2, 5]],
     ):
         """
         Pour redéfinir les paramètres de génération du modèle
         :param nb_grades: le nombre de paramètres (notes)
         :param max_grade: la note maximale à générer
-        :param border: les notes limites pour être évaluées positivement
-        :param poids: les poids associés aux différentes notes
-        :param lam: le critère l'acceptation de l'entrée
+        :param nb_categories: le nombre de catégories que l'on consifère (sans compter la catégorie nulle)
+        :param borders: les notes limites pour être évaluées positivement
+        :params valid_set: les ensembles de matières possibles pour valider les catégories
         :return: None
         """
-        self.nb_grades = nb_grades
+        self.nb_grades = len(borders[0])
         self.max_grade = max_grade
-        self.border = border
+        self.nb_categories = len(borders)
+        self.borders = borders
         self.valid_set = valid_set
+        self.classifier = Classifier(borders=self.borders, valid_set=self.valid_set,)
         self.__complete_valid_set()
 
     def get_parameters(self):
         """
         Renvoie les paramètres de génération des données
-        :return: {"nb_grades": le nombre de paramètres (notes), "max_grade": la note maximale à générer, "border": les notes limites pour être évaluées positivement, "poids": les poids associés aux différentes notes, "lam": le critère l'acceptation de l'entrée}
+        :return: {"nb_grades": le nombre de paramètres (notes), "max_grade": la note maximale à générer, "borders": les notes limites pour être évaluées positivement, "valid_set": les ensembles de matières pour valider les catégories}
         """
         return {
             "nb_grades": self.nb_grades,
             "max_grade": self.max_grade,
-            "border": np.array(self.border),
+            "nb_categories": self.nb_categories,
+            "borders": np.array(self.borders),
             "valid_set": np.array(self.valid_set),
         }
 
@@ -52,9 +55,15 @@ class Generator:
         Génère des paramètres de génération des données aléatoires
         :return: None
         """
-        nb_grades = rd.randint(3, 10)
+        nb_grades = rd.randint(3, 5)
         max_grade = rd.randint(5, 100)
-        border = [floor(rd.random() * (max_grade + 1)) for _ in range(nb_grades)]
+        nb_categories = rd.randint(1, 5)
+        borders = []
+        before = [self.max_grade for _ in range(nb_grades)]
+        for _ in range(nb_categories):
+            before = [floor(rd.randint(0, before[i])) for i in range(nb_grades)]
+            borders.append(before)
+        borders.reverse()
         all_combinations = list(
             chain.from_iterable(
                 combinations(range(1, nb_grades + 1), r)
@@ -62,29 +71,24 @@ class Generator:
             )
         )
         valid_set = rd.sample(all_combinations, rd.randint(1, 4))
-        return self.reset_parameters(nb_grades, max_grade, border, valid_set)
+        return self.reset_parameters(max_grade, borders, valid_set)
 
-    def generate(self, nb_data: int):
+    def generate(self, nb_data: int, raw: bool = False):
         """
         Pour générer nb_data nouvelles données, avec du bruit
         :param nb_data: nombre de données à générer
-        :param noise_var: la variance du bruit blanc à ajouter aux données
-        :return: les données sous la forme {"accepted": np.array([[1, 2, 3, 4, 5], [1, 1, 1, 1, 1]]), "rejected" : np.array([[1, 5, 6, 7, 8]])}
+        :param raw: si il daut aussi renvoyer les données brutes
+        :return: les données sous la forme {i: np.array([[1, 2, 3, 4, 5], [1, 1, 1, 1, 1]])} avec i le numéro de la catégorie (0 étant la catégorie "rejetée")
+                 Si raw est true, renvoie {"raw": les données brutes, "classified": les données classifiées}
         """
         to_int_vect = np.vectorize(int)
         data = to_int_vect(
             np.random.rand(nb_data, self.nb_grades) * (self.max_grade + 1)
         )
-        results = []
-        for i, row in enumerate(data >= self.border):
-            valid_grades = tuple([x + 1 for x in list(np.where(row)[0])])
-            if valid_grades in self.valid_set:
-                results.append(i)
-        mask = np.zeros(data.shape[0], dtype=bool)
-        mask[results] = True
-        accepted = data[mask, :]
-        rejected = data[~mask, :]
-        return {0: rejected, 1: accepted}
+        classified = self.classifier.classify(data)
+        if raw:
+            return {"raw": data, "classified": classified}
+        return classified
 
     def __complete_valid_set(self):
         """
