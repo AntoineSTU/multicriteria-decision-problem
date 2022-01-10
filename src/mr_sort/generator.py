@@ -15,9 +15,8 @@ class Generator:
 
     def reset_parameters(
         self,
-        nb_grades: int = 5,
         max_grade: float = 20,
-        border: List[int] = [12, 12, 12, 12, 12],
+        borders: List[List[int]] = [[12, 12, 12, 12, 12]],
         poids: List[int] = [1 / 5, 1 / 5, 1 / 5, 1 / 5, 1 / 5],
         lam: float = 0.3,
     ):
@@ -25,27 +24,29 @@ class Generator:
         Pour redéfinir les paramètres de génération du modèle
         :param nb_grades: le nombre de paramètres (notes)
         :param max_grade: la note maximale à générer
-        :param border: les notes limites pour être évaluées positivement
+        :param borders: les notes limites pour être évaluées positivement
         :param poids: les poids associés aux différentes notes
         :param lam: le critère l'acceptation de l'entrée
         :return: None
         """
-        self.nb_grades = nb_grades
+        self.nb_grades = len(borders[0])
         self.max_grade = max_grade
-        self.border = border
+        self.nb_categories = len(borders)
+        self.borders = borders
         self.poids = poids
         self.lam = lam
-        self.classifier = Classifier(border=border, poids=poids, lam=lam)
+        self.classifier = Classifier(borders=borders, poids=poids, lam=lam)
 
     def get_parameters(self):
         """
         Renvoie les paramètres de génération des données
-        :return: {"nb_grades": le nombre de paramètres (notes), "max_grade": la note maximale à générer, "border": les notes limites pour être évaluées positivement, "poids": les poids associés aux différentes notes, "lam": le critère l'acceptation de l'entrée}
+        :return: {"nb_grades": le nombre de paramètres (notes), "max_grade": la note maximale à générer, "nb_categories": le nombre de catégories, "borders": les notes limites pour être évaluées positivement, "poids": les poids associés aux différentes notes, "lam": le critère l'acceptation de l'entrée}
         """
         return {
             "nb_grades": self.nb_grades,
             "max_grade": self.max_grade,
-            "border": np.array(self.border),
+            "nb_categories": self.nb_categories,
+            "borders": np.array(self.borders),
             "poids": np.array(self.poids),
             "lam": self.lam,
         }
@@ -57,12 +58,17 @@ class Generator:
         """
         nb_grades = rd.randint(3, 10)
         max_grade = rd.randint(5, 100)
-        border = [floor(rd.random() * (max_grade + 1)) for _ in range(nb_grades)]
+        nb_categories = rd.randint(1, 5)
+        borders = []
+        before = [self.max_grade for _ in range(nb_grades)]
+        for _ in range(nb_categories):
+            before = [rd.random() * before[i] for i in range(nb_grades)]
+            borders.append(before)
         poids = [rd.random() for _ in range(nb_grades)]
         total = sum(poids)
         poids = [p / total for p in poids]
         lam = rd.random()
-        return self.reset_parameters(nb_grades, max_grade, border, poids, lam)
+        return self.reset_parameters(nb_grades, max_grade, borders, poids, lam)
 
     def generate(self, nb_data: int, noise_var: float = 0, raw: bool = False):
         """
@@ -74,11 +80,10 @@ class Generator:
         """
         data = np.random.rand(nb_data, self.nb_grades) * self.max_grade
         results = self.classifier.classify(data)
-        accepted = results["accepted"]
-        rejected = results["rejected"]
-        accepted = accepted + np.random.normal(0, noise_var, accepted.shape)
-        rejected = rejected + np.random.normal(0, noise_var, rejected.shape)
-        classified = {"accepted": accepted, "rejected": rejected}
+        classified = {
+            k: [x + np.random.normal(0, noise_var) for x in v]
+            for k, v in results.items()
+        }
         if raw:
             return {"raw": data, "classified": classified}
         return classified

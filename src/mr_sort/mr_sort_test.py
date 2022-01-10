@@ -60,7 +60,7 @@ def test_basic():
 
     # Génération des données d'entraînement et résolution
     data = g.generate(100)
-    params_returned = s.solve(data["accepted"], data["rejected"])
+    params_returned = s.solve(data)
 
     # Génération des données de test et test
     res = g.generate(20, raw=True)
@@ -81,7 +81,7 @@ def test_basic_var_1():
 
     # Génération des données d'entraînement et résolution
     data = g.generate(100, noise_var=0.1)
-    params_returned = s.solve(data["accepted"], data["rejected"])
+    params_returned = s.solve(data)
 
     # Génération des données de test et test
     res = g.generate(20, noise_var=0.1, raw=True)
