@@ -1,0 +1,6 @@
+.DS_Store
+*.pyc
+.pytest_cache
+
+src/ncs/workingfile.cnf
+src/ncs/gophersat
