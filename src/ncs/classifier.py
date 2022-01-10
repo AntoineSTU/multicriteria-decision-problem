@@ -18,9 +18,6 @@ class Classifier:
     ):
         """
         Pour redéfinir les paramètres de génération du modèle
-        :param nb_grades: le nombre de paramètres (notes)
-        :param max_grade: la note maximale à générer
-        :param nb_categories: le nombre de catégories que l'on consifère (sans compter la catégorie nulle)
         :param borders: les notes limites pour être évaluées positivement
         :params valid_set: les ensembles de matières possibles pour valider les catégories
         :return: None
@@ -34,7 +31,7 @@ class Classifier:
     def classify(self, data: List[List[int]]) -> Dict[int, List[List[int]]]:
         """
         To classify elements according to the parameters
-        :param elements: les ensembles de notes à classer
+        :param data: les ensembles de notes à classer
         :return: les ensembles de notes classés
         """
         data = np.array(data)

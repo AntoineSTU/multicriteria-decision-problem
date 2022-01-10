@@ -1,10 +1,13 @@
 import pytest
+from typing import Dict, List
 from src.ncs.generator import Generator
 from src.ncs.classifier import Classifier
 from src.ncs.solver import Solver
 
 
-def compare_results(real_results, comp_results):
+def compare_results(
+    real_results: Dict[int, List[List[int]]], comp_results: Dict[int, List[List[int]]]
+):
     """
     Compare les résultats réels et estimés
     :param real_results: les données générées

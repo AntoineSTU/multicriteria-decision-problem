@@ -2,6 +2,7 @@ from typing import List
 import numpy as np
 import random as rd
 from math import floor
+from src.mr_sort.classifier import Classifier
 
 
 class Generator:
@@ -34,6 +35,7 @@ class Generator:
         self.border = border
         self.poids = poids
         self.lam = lam
+        self.classifier = Classifier(border=border, poids=poids, lam=lam)
 
     def get_parameters(self):
         """
@@ -62,17 +64,21 @@ class Generator:
         lam = rd.random()
         return self.reset_parameters(nb_grades, max_grade, border, poids, lam)
 
-    def generate(self, nb_data: int, noise_var: float = 0):
+    def generate(self, nb_data: int, noise_var: float = 0, raw: bool = False):
         """
         Pour générer nb_data nouvelles données, avec du bruit
         :param nb_data: nombre de données à générer
         :param noise_var: la variance du bruit blanc à ajouter aux données
+        :param raw: si les données brutes doivent être renvoyées ou non
         :return: les données sous la forme {"accepted": np.array([[1, 2, 3, 4, 5], [1, 1, 1, 1, 1]]), "rejected" : np.array([[1, 5, 6, 7, 8]])}
         """
         data = np.random.rand(nb_data, self.nb_grades) * self.max_grade
-        results = ((data >= self.border) * self.poids).sum(axis=1) > self.lam
-        accepted = data[results, :]
-        rejected = data[~results, :]
+        results = self.classifier.classify(data)
+        accepted = results["accepted"]
+        rejected = results["rejected"]
         accepted = accepted + np.random.normal(0, noise_var, accepted.shape)
         rejected = rejected + np.random.normal(0, noise_var, rejected.shape)
-        return {"accepted": accepted, "rejected": rejected}
+        classified = {"accepted": accepted, "rejected": rejected}
+        if raw:
+            return {"raw": data, "classified": classified}
+        return classified
