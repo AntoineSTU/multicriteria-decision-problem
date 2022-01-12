@@ -175,10 +175,6 @@ class BinarySolver:
         self.model.params.outputflag = 0
         self.model.optimize()
 
-        print(
-            "La solution optimale est b = {} et weights = {}".format(self.b_i, self.w_i)
-        )
-
         if self.model.status == gp.GRB.INFEASIBLE:
             raise ValueError("Model was proven to be infeasible.")
         elif self.model.status == gp.GRB.INF_OR_UNBD:
@@ -186,10 +182,8 @@ class BinarySolver:
         elif self.model.status == gp.GRB.UNBOUNDED:
             raise ValueError("Model was proven to be unbounded.")
         elif self.model.status == gp.GRB.OPTIMAL:
-            print(self.b_i.X)
 
             return {
-                "nb_grades": self.nb_courses,
                 "lam": self.lambda_.X,
                 "border": self.b_i.X,
                 "poids": self.w_i.X,
