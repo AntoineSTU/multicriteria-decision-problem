@@ -31,8 +31,11 @@ def eval_solver(solver_params, ecart: float = 0.5, noise: Optional[float] = None
     """
     # create new data
     generator = Generator()
+    generator.set_parameters(**solver_params)
     eval_data = generator.generate(20, noise=noise)
     true = eval_data["classified"]
+
+    print(solver_params)
 
     classifier_computed = Classifier(**solver_params)
     pred = classifier_computed.classify(eval_data["raw"])
@@ -85,6 +88,7 @@ def test_basic():
     """
     # Création des objets
     generator = Generator()
+    generator.set_parameters()
     gen_params = generator.get_parameters()
 
     gen_data = generator.generate(100)
@@ -109,6 +113,7 @@ def test_noisy():
     """
     # Création des objets
     generator = Generator()
+    generator.set_parameters()
     gen_params = generator.get_parameters()
 
     gen_data = generator.generate(100, noise=0.1)
@@ -135,7 +140,8 @@ def test_rd_params():
     for _ in range(10):
         # Création des objets
         generator = Generator()
-        gen_params = generator.random_parameters()
+        generator.set_rd_params()
+        gen_params = generator.get_parameters()
 
         gen_data = generator.generate(100)
         refused = gen_data["classified"]["rejected"]
@@ -160,7 +166,8 @@ def test_noisy_rd_params():
     for _ in range(10):
         # Création des objets
         generator = Generator()
-        gen_params = generator.random_parameters()
+        generator.set_rd_params()
+        gen_params = generator.get_parameters()
 
         gen_data = generator.generate(100, noise=0.1)
         refused = gen_data["classified"]["rejected"]

@@ -6,14 +6,19 @@ from src.mr_sort.classifier import Classifier
 
 
 class Generator:
-    def __init__(self, **kwargs):
+    def __init__(self):
         """
         Pour initialiser le générateur
         Appelle reset_parameter
         """
-        return self.reset_parameters(**kwargs)
+        self.nb_grades = None
+        self.max_grade = None
+        self.border = None
+        self.poids = None
+        self.lam = None
+        self.classifier = None
 
-    def reset_parameters(
+    def set_parameters(
         self,
         nb_grades: int = 5,
         max_grade: float = 20,
@@ -35,7 +40,23 @@ class Generator:
         self.border = border
         self.poids = poids
         self.lam = lam
-        self.classifier = Classifier(border=border, poids=poids, lam=lam)
+        self.classifier = Classifier(border=self.border, poids=self.poids, lam=self.lam)
+
+    def set_rd_params(self):
+        """
+        Génère des paramètres de génération des données aléatoires
+        :return: None
+        """
+        self.nb_grades = rd.randint(3, 10)
+        self.max_grade = rd.randint(5, 100)
+        self.border = [
+            floor(rd.random() * (self.max_grade + 1)) for _ in range(self.nb_grades)
+        ]
+        poids = [rd.random() for _ in range(self.nb_grades)]
+        total = sum(poids)
+        self.poids = [p / total for p in poids]
+        self.lam = rd.random()
+        self.classifier = Classifier(border=self.border, poids=self.poids, lam=self.lam)
 
     def get_parameters(self):
         """
@@ -49,21 +70,6 @@ class Generator:
             "poids": np.array(self.poids),
             "lam": self.lam,
         }
-
-    def random_parameters(self):
-        """
-        Génère des paramètres de génération des données aléatoires
-        :return: None
-        """
-        nb_grades = rd.randint(3, 10)
-        max_grade = rd.randint(5, 100)
-        border = [floor(rd.random() * (max_grade + 1)) for _ in range(nb_grades)]
-        poids = [rd.random() for _ in range(nb_grades)]
-        total = sum(poids)
-        poids = [p / total for p in poids]
-        lam = rd.random()
-        self.reset_parameters(nb_grades, max_grade, border, poids, lam)
-        return self.get_parameters()
 
     def generate(self, nb_data: int, noise: Optional[float] = None):
         """
