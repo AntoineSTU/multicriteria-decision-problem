@@ -73,11 +73,10 @@ class Generator:
         valid_set = rd.sample(all_combinations, rd.randint(1, 4))
         return self.reset_parameters(max_grade, borders, valid_set)
 
-    def generate(self, nb_data: int, raw: bool = False):
+    def generate(self, nb_data: int):
         """
         Pour générer nb_data nouvelles données, avec du bruit
         :param nb_data: nombre de données à générer
-        :param raw: si il daut aussi renvoyer les données brutes
         :return: les données sous la forme {i: np.array([[1, 2, 3, 4, 5], [1, 1, 1, 1, 1]])} avec i le numéro de la catégorie (0 étant la catégorie "rejetée")
                  Si raw est true, renvoie {"raw": les données brutes, "classified": les données classifiées}
         """
@@ -86,8 +85,6 @@ class Generator:
             np.random.rand(nb_data, self.nb_grades) * (self.max_grade + 1)
         )
         classified = self.classifier.classify(data)
-        if raw:
-            return {"raw": data, "classified": classified}
         return classified
 
     def __complete_valid_set(self):

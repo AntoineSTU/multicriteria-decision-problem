@@ -49,6 +49,22 @@ class Classifier:
         results[0] = data
         return results
 
+    def classify_one(self, grades: List[int]) -> int:
+        """
+        To classify elements according to the parameters
+        :param grades: l'ensemble de notes à classer
+        :return: la catégorie
+        """
+        grades = np.array(grades)
+        for k in range(self.nb_categories, 0, -1):
+            valid_grades = tuple(
+                [x + 1 for x in list(np.where(grades >= self.borders[k - 1])[0])]
+            )
+            print(k, valid_grades)
+            if valid_grades in self.valid_set:
+                return k
+        return 0
+
     def __complete_valid_set(self):
         """
         Pour compléter l'ensemble de validation 
