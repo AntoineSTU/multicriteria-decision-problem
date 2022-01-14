@@ -113,7 +113,7 @@ Pour lancer le solveur, il faut
 
   // Pour NCS
   {
-      "borders": list des frontières correspondant aux différentes classes,
+      "borders": liste des frontières correspondant aux différentes classes,
       "valid_set": liste des ensembles de matières acceptés pour entrer dans une catégorie
   }
   ```
@@ -139,5 +139,6 @@ Les méthodes sont les suivantes:
 
 - **reset_parameters**: pour réinitialiser la classe avec de nouveaux paramètres
 - **classify**: pour classifier des données selon les paramètres donnés précédemment
+- **classify_one**: pour classifier un ensemblde de notes (renvoie sa classe)
 
 Pour avoir plus d'info sur ces méthodes, il suffit de lancer la commande `help(Generator)` dans l'interpréteur Python.
