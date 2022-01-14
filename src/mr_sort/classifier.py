@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Classifier:
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """
         Pour initialiser le générateur
         Appelle reset_parameter
@@ -16,7 +16,7 @@ class Classifier:
         borders: List[List[int]],
         poids: List[int],
         lam: float,
-    ):
+    ) -> None:
         """
         Pour redéfinir les paramètres de génération du modèle
         :param borders: les notes limites pour être évaluées positivement
@@ -38,15 +38,15 @@ class Classifier:
         """
         data = np.array(data)
         results = {}
-        for k in range(self.nb_categories, 0, -1):
-            res_k = []
-            for i, row in enumerate(data >= self.borders[k - 1]):
+        for category in range(self.nb_categories, 0, -1):
+            students_in_category = []
+            for i, row in enumerate(data >= self.borders[category - 1]):
                 tot_sum = sum([self.poids[j] for j in list(np.where(row)[0])])
                 if tot_sum >= self.lam:
-                    res_k.append(i)
+                    students_in_category.append(i)
             mask = np.zeros(data.shape[0], dtype=bool)
-            mask[res_k] = True
-            results[k] = data[mask, :]
+            mask[students_in_category] = True
+            results[category] = data[mask, :]
             data = data[~mask, :]
         results[0] = data
         return results

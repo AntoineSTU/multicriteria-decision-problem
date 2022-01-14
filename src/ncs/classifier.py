@@ -51,7 +51,7 @@ class Classifier:
 
     def __complete_valid_set(self):
         """
-        Pour compléter l'ensemble de validation 
+        Pour compléter l'ensemble de validation
         :return: None
         """
         all_sets = []

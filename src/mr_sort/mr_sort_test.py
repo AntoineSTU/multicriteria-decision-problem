@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Optional
 from src.mr_sort.generator import Generator
 from src.mr_sort.classifier import Classifier
 from src.mr_sort.binary_solver import BinarySolver

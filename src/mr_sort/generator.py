@@ -1,11 +1,11 @@
-from typing import List
+from typing import Any, List, Dict, Optional
 import numpy as np
 import random as rd
 from src.mr_sort.classifier import Classifier
 
 
 class Generator:
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Pour initialiser le générateur
         Appelle reset_parameter
@@ -23,7 +23,7 @@ class Generator:
         borders: List[List[int]] = [[12, 12, 12, 12, 12]],
         poids: List[int] = [1 / 5, 1 / 5, 1 / 5, 1 / 5, 1 / 5],
         lam: float = 0.6,
-    ):
+    ) -> None:
         """
         Pour redéfinir les paramètres de génération du modèle
         :param nb_grades: le nombre de paramètres (notes)
@@ -41,7 +41,7 @@ class Generator:
         self.lam = lam
         self.classifier = Classifier(borders=borders, poids=poids, lam=lam)
 
-    def get_parameters(self):
+    def get_parameters(self) -> Dict[str, Any]:
         """
         Renvoie les paramètres de génération des données
         :return: {"nb_grades": le nombre de paramètres (notes), "max_grade": la note maximale à générer, "nb_categories": le nombre de catégories, "borders": les notes limites pour être évaluées positivement, "poids": les poids associés aux différentes notes, "lam": le critère l'acceptation de l'entrée}
@@ -55,7 +55,7 @@ class Generator:
             "lam": self.lam,
         }
 
-    def random_parameters(self):
+    def set_rd_params(self) -> Dict[str, Any]:
         """
         Génère des paramètres de génération des données aléatoires
         :return: None
@@ -74,7 +74,9 @@ class Generator:
         lam = rd.random()
         return self.reset_parameters(nb_grades, max_grade, borders, poids, lam)
 
-    def generate(self, nb_data: int, noise_var: float = 0, raw: bool = False):
+    def generate(
+        self, nb_data: int, noise_var: Optional[float] = None, raw: bool = False
+    ) -> Dict[int, List[List[int]]]:
         """
         Pour générer nb_data nouvelles données, avec du bruit
         :param nb_data: nombre de données à générer
@@ -84,10 +86,13 @@ class Generator:
         """
         data = np.random.rand(nb_data, self.nb_grades) * self.max_grade
         results = self.classifier.classify(data)
-        classified = {
-            k: [x + np.random.normal(0, noise_var) for x in v]
-            for k, v in results.items()
-        }
+        if noise_var is not None:
+            classified = {
+                k: [x + np.random.normal(0, noise_var) for x in v]
+                for k, v in results.items()
+            }
+        else:
+            classified = results
         if raw:
             return {"raw": data, "classified": classified}
         return classified
