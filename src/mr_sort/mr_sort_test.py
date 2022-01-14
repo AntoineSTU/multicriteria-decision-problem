@@ -97,12 +97,12 @@ def test_basic():
     accepted = gen_data["classified"]["accepted"]
 
     solver = BinarySolver(
-        nb_courses=gen_params["nb_grades"],
-        nb_students=len(accepted) + len(refused),
+        nb_courses=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
     )
 
     # Génération des données d'entraînement et résolution
-    solver_params = solver.solve(accepted, refused)
+    data = g.generate(100)
+    params_returned = s.solve(data)
 
     # Génération des données de test et test
     eval_solver(gen_params=gen_params, solver_params=solver_params)
@@ -122,12 +122,12 @@ def test_noisy():
     accepted = gen_data["classified"]["accepted"]
 
     solver = RelaxedBinarySolver(
-        nb_courses=gen_params["nb_grades"],
-        nb_students=len(accepted) + len(refused),
+        nb_courses=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
     )
 
     # Génération des données d'entraînement et résolution
-    solver_params = solver.solve(accepted, refused)
+    data = g.generate(100, noise_var=0.1)
+    params_returned = s.solve(data)
 
     # Génération des données de test et test
     eval_solver(gen_params=gen_params, solver_params=solver_params, noise=0.1)
@@ -158,8 +158,7 @@ def test_rd_params():
 
         # Génération des données de test et test
         eval_solver(
-            gen_params=gen_params,
-            solver_params=solver_params,
+            gen_params=gen_params, solver_params=solver_params,
         )
 
 
