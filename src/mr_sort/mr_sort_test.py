@@ -18,7 +18,7 @@ def eval_solver(
     # create new data
     generator = Generator()
     generator.set_parameters(**gen_params)
-    eval_data = generator.generate(100, noise=noise)
+    eval_data = generator.generate(100, noise_var=noise)
     true = eval_data["classified"]
 
     classifier_computed = Classifier(**solver_params)
@@ -76,8 +76,8 @@ def test_basic():
     gen_params = generator.get_parameters()
 
     gen_data = generator.generate(100)
-    refused = gen_data["classified"]["rejected"]
-    accepted = gen_data["classified"]["accepted"]
+    refused = gen_data["classified"][0]
+    accepted = gen_data["classified"][1]
 
     solver = BinarySolver(
         nb_courses=gen_params["nb_grades"],
@@ -100,9 +100,9 @@ def test_noisy():
     generator.set_parameters()
     gen_params = generator.get_parameters()
 
-    gen_data = generator.generate(100, noise=0.1)
-    refused = gen_data["classified"]["rejected"]
-    accepted = gen_data["classified"]["accepted"]
+    gen_data = generator.generate(100, noise_var=0.1)
+    refused = gen_data["classified"][0]
+    accepted = gen_data["classified"][1]
 
     solver = RelaxedBinarySolver(
         nb_courses=gen_params["nb_grades"],
@@ -113,7 +113,7 @@ def test_noisy():
     solver_params = solver.solve(accepted, refused)
 
     # Génération des données de test et test
-    eval_solver(gen_params=gen_params, solver_params=solver_params, noise=0.1)
+    eval_solver(gen_params=gen_params, solver_params=solver_params, noise_var=0.1)
 
 
 def test_rd_params():
@@ -128,8 +128,8 @@ def test_rd_params():
         gen_params = generator.get_parameters()
 
         gen_data = generator.generate(100)
-        refused = gen_data["classified"]["rejected"]
-        accepted = gen_data["classified"]["accepted"]
+        refused = gen_data["classified"][0]
+        accepted = gen_data["classified"][1]
 
         solver = RelaxedBinarySolver(
             nb_courses=gen_params["nb_grades"],
@@ -156,9 +156,9 @@ def test_noisy_rd_params():
         generator.set_rd_params()
         gen_params = generator.get_parameters()
 
-        gen_data = generator.generate(100, noise=0.1)
-        refused = gen_data["classified"]["rejected"]
-        accepted = gen_data["classified"]["accepted"]
+        gen_data = generator.generate(100, noise_var=0.1)
+        refused = gen_data["classified"][0]
+        accepted = gen_data["classified"][1]
 
         solver = RelaxedBinarySolver(
             nb_courses=gen_params["nb_grades"],
@@ -169,4 +169,4 @@ def test_noisy_rd_params():
         solver_params = solver.solve(accepted, refused)
 
         # Génération des données de test et test
-        eval_solver(gen_params=gen_params, solver_params=solver_params, noise=0.1)
+        eval_solver(gen_params=gen_params, solver_params=solver_params, noise_var=0.1)

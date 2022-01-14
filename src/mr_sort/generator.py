@@ -23,6 +23,8 @@ class Generator:
         borders: List[List[int]] = [[12, 12, 12, 12, 12]],
         poids: List[int] = [1 / 5, 1 / 5, 1 / 5, 1 / 5, 1 / 5],
         lam: float = 0.6,
+        nb_grades=None,
+        nb_categories=None,
     ) -> None:
         """
         Pour redéfinir les paramètres de génération du modèle
@@ -72,10 +74,10 @@ class Generator:
         total = sum(poids)
         poids = [p / total for p in poids]
         lam = rd.random()
-        return self.reset_parameters(nb_grades, max_grade, borders, poids, lam)
+        return self.reset_parameters(max_grade, borders, poids, lam)
 
     def generate(
-        self, nb_data: int, noise_var: Optional[float] = None, raw: bool = False
+        self, nb_data: int, noise_var: Optional[float] = None, raw: bool = True
     ) -> Dict[int, List[List[int]]]:
         """
         Pour générer nb_data nouvelles données, avec du bruit
