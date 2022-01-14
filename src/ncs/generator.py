@@ -61,7 +61,7 @@ class Generator:
         borders = []
         before = [self.max_grade for _ in range(nb_grades)]
         for _ in range(nb_categories):
-            before = [floor(rd.randint(0, before[i])) for i in range(nb_grades)]
+            before = [rd.randint(0, before[i]) for i in range(nb_grades)]
             borders.append(before)
         borders.reverse()
         all_combinations = list(
