@@ -114,7 +114,7 @@ def test_rd_params():
         solver_params = solver.solve(accepted, refused)
 
         # Génération des données de test et test
-        eval_solver(gen_params=gen_params, solver_params=solver_params, ecart=0.4)
+        eval_solver(gen_params=gen_params, solver_params=solver_params)
 
 
 def test_noisy_rd_params():
