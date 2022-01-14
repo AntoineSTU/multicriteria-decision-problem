@@ -1,26 +1,9 @@
 from typing import Dict, List, Optional
-import pytest
 from src.mr_sort.generator import Generator
 from src.mr_sort.classifier import Classifier
 from src.mr_sort.binary_solver import BinarySolver
 from src.mr_sort.relaxed_binary_solver import RelaxedBinarySolver
 from pprint import pprint
-
-# def compare_params(real_params, comp_params, ecart: float = 0.1):
-#     """
-#     Compare les paramètres réels et estimés
-#     :param real_params: les paramètres à partir desquels ont été générées les données
-#     :param comp_params: les paramètres calculées par le solver
-#     :param ecart: écart relatif pour la validation des résultats
-#     :return: None
-#     """
-#     assert (
-#         real_params["border"] - comp_params["border"] < 0.1 * real_params["border"]
-#     ).all()
-#     assert (
-#         real_params["poids"] - comp_params["poids"] < 0.1 * real_params["poids"]
-#     ).all()
-#     assert real_params["lam"] - comp_params["lam"] < 0.1 * real_params["lam"]
 
 
 def eval_solver(
