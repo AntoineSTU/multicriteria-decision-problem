@@ -1,5 +1,5 @@
 import pytest
-from typing import Any, Dict, List
+from typing import Any, Dict
 from src.ncs.generator import Generator
 from src.ncs.classifier import Classifier
 from src.ncs.solver import Solver
@@ -12,6 +12,7 @@ def eval_solver(
     Compare les résultats réels et estimés
     :param gen_params: les paramètres de génération
     :param comp_results: les paramètres du solver
+    :param ecart: l'accuracy à vérifier sur les résultats
     :return: None
     """
     # Generate data
