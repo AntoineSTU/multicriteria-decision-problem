@@ -16,26 +16,23 @@ L'objectif de ce cours est de construire des solveurs pour deux problèmes.
 
 Le premier problème est intitulé MR-Sort:
 
-#
-
-**Étant donné:**
-
-- un ensemble de classes : $C^0 ... C^p$
-- un ensemble de de matières : $m_1 ... m_n$
-- un ensemble de de frontières (notes limites) : $\forall k\in \llbracket 1,k \rrbracket, b^k\in [0..N]^n$,
-- un ensemble de poids : $w_0 ... w_n \in \mathbb{R}^+$
-- une constante : $\lambda \in [0, 1]$
-
-**Sous les contraintes:**
-
-- $\forall k < k'\in \llbracket 1,p\rrbracket , \forall i \in \llbracket 1,n\rrbracket , b^k_i \leq b^{k'}_i$,
-- $\sum_{i=1}^{n} w_i = 1$
-
-**On définit:**
-
-$x\in [0,N]^n$ est dans la classe $C^k$ ssi $\sum_{\{i\in \llbracket 0,N\rrbracket /x_i \geq b^k_i\}} w_i \geq \lambda$ et $\sum_{\{i\in \llbracket 0,N\rrbracket /x_i \geq b^{k+1}_i\}} w_i < \lambda$
-
-#
+> **Étant donné:**
+>
+> - un ensemble de classes : $C^0 ... C^p$
+> - un ensemble de de matières : $m_1 ... m_n$
+> - une note maximale $N$ (les notes allant de 0 à $N$)
+> - un ensemble de de frontières (notes limites) : $\forall k\in \llbracket 1,k \rrbracket, b^k\in [0..N]^n$,
+> - un ensemble de poids : $w_0 ... w_n \in \mathbb{R}^+$
+> - une constante : $\lambda \in [0, 1]$
+>
+> **Sous les contraintes:**
+>
+> - $\forall k < k'\in \llbracket 1,p\rrbracket , \forall i \in \llbracket 1,n\rrbracket , b^k_i \leq b^{k'}_i$,
+> - $\sum_{i=1}^{n} w_i = 1$
+>
+> **On définit:**
+>
+> $x\in [0,N]^n$ est dans la classe $C^k$ ssi $\sum_{\{i\in \llbracket 0,N\rrbracket /x_i \geq b^k_i\}} w_i \geq > \lambda$ et $\sum_{\{i\in \llbracket 0,N\rrbracket /x_i \geq b^{k+1}_i\}} w_i < \lambda$
 
 Ce problème est résolu linéairement à l'aide du solveur Gurobi.
 
@@ -43,24 +40,21 @@ Ce problème est résolu linéairement à l'aide du solveur Gurobi.
 
 Le deuxième problème est intitulé NCS:
 
-#
-
-**Étant donné:**
-
-- un ensemble de classes $C^0 ... C^p$
-- un ensemble de de matières $m_1 ... m_n$
-- un ensemble de de frontières (notes limites) $\forall k\in \llbracket 1,p\rrbracket , b^k\in \llbracket 0,N\rrbracket ^n$,
-- un ensemble de coalitions suffisantes $T$
-
-**Sous les contraintes:**
-
-- $\forall k < k'\in \llbracket 1,p\rrbracket , \forall i \in \llbracket 1,n\rrbracket , b^k_i \leq b^{k'}_i$,
-
-**On définit:**
-
-$x\in \llbracket 0,N\rrbracket ^n$ est dans la classe $C^k$ ssi $\{i\in \llbracket 1,n\rrbracket /x_i \geq b^k_i\}\in T$ et $\{i\in \llbracket 1,n\rrbracket /x_i \geq b^{k+1}_i\}\notin T$
-
-#
+> **Étant donné:**
+>
+> - un ensemble de classes $C^0 ... C^p$
+> - un ensemble de de matières $m_1 ... m_n$
+> - une note maximale $N$ (les notes allant de 0 à $N$)
+> - un ensemble de de frontières (notes limites) $\forall k\in \llbracket 1,p\rrbracket , b^k\in \llbracket 0,N\rrbracket ^n$,
+> - un ensemble de coalitions suffisantes $T$
+>
+> **Sous les contraintes:**
+>
+> - $\forall k < k'\in \llbracket 1,p\rrbracket , \forall i \in \llbracket 1,n\rrbracket , b^k_i \leq b^{k'}_i$,
+>
+> **On définit:**
+>
+> $x\in \llbracket 0,N\rrbracket ^n$ est dans la classe $C^k$ ssi $\{i\in \llbracket 1,n\rrbracket /x_i \geq b^k_i\}\in T$ et $\{i\in \llbracket 1,n\rrbracket /x_i \geq b^{k+1}_i\}\notin T$
 
 Ce problème est résolu à l'aide du solveur SAT gophersat.
 
@@ -119,7 +113,7 @@ Pour lancer le solveur, il faut
 
   // Pour NCS
   {
-      "borders": list des frontières correspondant aux différentes classes,
+      "borders": liste des frontières correspondant aux différentes classes,
       "valid_set": liste des ensembles de matières acceptés pour entrer dans une catégorie
   }
   ```
@@ -145,5 +139,6 @@ Les méthodes sont les suivantes:
 
 - **reset_parameters**: pour réinitialiser la classe avec de nouveaux paramètres
 - **classify**: pour classifier des données selon les paramètres donnés précédemment
+- **classify_one**: pour classifier un ensemblde de notes (renvoie sa classe)
 
 Pour avoir plus d'info sur ces méthodes, il suffit de lancer la commande `help(Generator)` dans l'interpréteur Python.

@@ -1,27 +1,39 @@
 import pytest
-from typing import Dict, List
+from typing import Any, Dict, List
 from src.ncs.generator import Generator
 from src.ncs.classifier import Classifier
 from src.ncs.solver import Solver
 
 
-def compare_results(
-    real_results: Dict[int, List[List[int]]], comp_results: Dict[int, List[List[int]]]
-):
+def eval_solver(
+    gen_params: Dict[str, Any], solver_params: Dict[str, Any], ecart: float = 0.2
+) -> None:
     """
     Compare les résultats réels et estimés
-    :param real_results: les données générées
-    :param comp_results: les données calculées par le solver
+    :param gen_params: les paramètres de génération
+    :param comp_results: les paramètres du solver
     :return: None
     """
-    real_results = {k: sorted([tuple(x) for x in v]) for k, v in real_results.items()}
-    comp_results = {k: sorted([tuple(x) for x in v]) for k, v in comp_results.items()}
-    for k, v_real in real_results.items():
-        if len(v_real) > 0:
-            v_comp = comp_results[k]
-            for i, x_real in enumerate(v_real):
-                x_comp = v_comp[i]
-                assert x_real == x_comp
+    # Generate data
+    g = Generator(
+        max_grade=gen_params["max_grade"],
+        borders=gen_params["borders"],
+        valid_set=gen_params["valid_set"],
+    )
+    data_true_classified = g.generate(20)
+    classifier_solver = Classifier(
+        borders=solver_params["borders"], valid_set=solver_params["valid_set"]
+    )
+    # Verify data
+    nb_class_false = 0
+    nb_class_tot = 0
+    for category_real, grades_set_real in data_true_classified.items():
+        nb_class_tot += len(grades_set_real)
+        for grades_real in grades_set_real:
+            category_classified = classifier_solver.classify_one(grades_real)
+            if category_classified != category_real:
+                nb_class_false += 1
+    assert nb_class_false / nb_class_tot <= ecart
 
 
 def test_basic():
@@ -30,23 +42,19 @@ def test_basic():
     """
     # Création des objets
     g = Generator()
-    parameters = g.get_parameters()
+    gen_params = g.get_parameters()
     s = Solver(
         nb_categories=1,
-        nb_grades=parameters["nb_grades"],
-        max_grade=parameters["max_grade"],
+        nb_grades=gen_params["nb_grades"],
+        max_grade=gen_params["max_grade"],
     )
 
     # Génération des données d'entraînement et résolution
     data = g.generate(200)
-    params_returned = s.solve(data)
+    solver_params = s.solve(data)
 
     # Génération des données de test et test
-    res = g.generate(20, raw=True)
-    test_true = res["classified"]
-    classifier_computed = Classifier(**params_returned)
-    test_comp = classifier_computed.classify(res["raw"])
-    compare_results(test_true, test_comp)
+    eval_solver(gen_params=gen_params, solver_params=solver_params)
 
 
 def test_all():
@@ -57,20 +65,16 @@ def test_all():
     for _ in range(10):
         # Création des objets
         g.random_parameters()
-        parameters = g.get_parameters()
+        gen_params = g.get_parameters()
         s = Solver(
-            nb_categories=parameters["nb_categories"],
-            nb_grades=parameters["nb_grades"],
-            max_grade=parameters["max_grade"],
+            nb_categories=gen_params["nb_categories"],
+            nb_grades=gen_params["nb_grades"],
+            max_grade=gen_params["max_grade"],
         )
 
         # Génération des données d'entraînement et résolution
-        data = g.generate(1000)
-        params_returned = s.solve(data)
+        data = g.generate(200)
+        solver_params = s.solve(data)
 
         # Génération des données de test et test
-        res = g.generate(20, raw=True)
-        test_true = res["classified"]
-        classifier_computed = Classifier(**params_returned)
-        test_comp = classifier_computed.classify(res["raw"])
-        compare_results(test_true, test_comp)
+        eval_solver(gen_params=gen_params, solver_params=solver_params)
