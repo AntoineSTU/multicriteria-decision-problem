@@ -1,10 +1,10 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 import pytest
 from src.mr_sort.generator import Generator
 from src.mr_sort.classifier import Classifier
-from solver import Solver
-import random as rd
-
+from src.mr_sort.binary_solver import BinarySolver
+from src.mr_sort.relaxed_binary_solver import RelaxedBinarySolver
+from pprint import pprint
 
 # def compare_params(real_params, comp_params, ecart: float = 0.1):
 #     """
@@ -23,10 +23,8 @@ import random as rd
 #     assert real_params["lam"] - comp_params["lam"] < 0.1 * real_params["lam"]
 
 
-def compare_results(
-    real_results: Dict[int, List[List[int]]],
-    comp_results: Dict[int, List[List[int]]],
-    ecart: float = 0.1,
+def eval_solver(
+    gen_params, solver_params, ecart: float = 0.5, noise: Optional[float] = None
 ):
     """
     Compare les résultats réels et estimés
@@ -34,19 +32,55 @@ def compare_results(
     :param comp_results: les données calculées par le solver
     :return: None
     """
-    nb_invalid = 0
-    nb_tot = 0
-    real_results = {k: sorted([tuple(x) for x in v]) for k, v in real_results.items()}
-    comp_results = {k: sorted([tuple(x) for x in v]) for k, v in comp_results.items()}
-    for k, v_real in real_results.items():
-        if len(v_real) > 0:
-            v_comp = comp_results[k]
-            for i, x_real in enumerate(v_real):
-                x_comp = v_comp[i]
-                if x_real != x_comp:
-                    nb_invalid += 1
-                nb_tot += 1
-    assert nb_invalid / nb_tot <= ecart
+    # create new data
+    generator = Generator()
+    generator.set_parameters(**gen_params)
+    eval_data = generator.generate(100, noise=noise)
+    true = eval_data["classified"]
+
+    classifier_computed = Classifier(**solver_params)
+    pred = classifier_computed.classify(eval_data["raw"])
+
+    true_accepted = [
+        sorted([mark.round(2) for mark in student_marks])
+        for student_marks in true["accepted"]
+    ]
+    pred_accepted = [
+        sorted([mark.round(2) for mark in student_marks])
+        for student_marks in pred["accepted"]
+    ]
+
+    true_refused = [
+        sorted([mark.round(2) for mark in student_marks])
+        for student_marks in true["rejected"]
+    ]
+    pred_refused = [
+        sorted([mark.round(2) for mark in student_marks])
+        for student_marks in pred["rejected"]
+    ]
+
+    fp = 0
+    fn = 0
+    tp = 0
+    tn = 0
+
+    for accepted_student in pred_accepted:
+        if accepted_student in true_accepted:
+            tp += 1
+        else:
+            fp += 1
+    for refused_student in pred_refused:
+        if refused_student in true_refused:
+            tn += 1
+        else:
+            fn += 1
+
+    error = (fp + fn) / (tp + fp + tn + fn)
+
+    pprint(solver_params)
+    pprint(gen_params)
+
+    assert error <= ecart
 
 
 def test_basic():
@@ -54,84 +88,102 @@ def test_basic():
     Données simples avec variance de 0 pour le bruit blanc
     """
     # Création des objets
-    g = Generator()
-    parameters = g.get_parameters()
-    s = Solver()
+    generator = Generator()
+    generator.set_parameters()
+    gen_params = generator.get_parameters()
+
+    gen_data = generator.generate(100)
+    refused = gen_data["classified"]["rejected"]
+    accepted = gen_data["classified"]["accepted"]
+
+    solver = BinarySolver(
+        nb_courses=gen_params["nb_grades"],
+        nb_students=len(accepted) + len(refused),
+    )
 
     # Génération des données d'entraînement et résolution
-    data = g.generate(100)
-    params_returned = s.solve(data["accepted"], data["rejected"])
+    solver_params = solver.solve(accepted, refused)
 
     # Génération des données de test et test
-    res = g.generate(20, raw=True)
-    test_true = res["classified"]
-    classifier_computed = Classifier(**params_returned)
-    test_comp = classifier_computed.classify(res["raw"])
-    compare_results(test_true, test_comp)
+    eval_solver(gen_params=gen_params, solver_params=solver_params)
 
 
-def test_basic_var_1():
+def test_noisy():
     """
     Données simples avec variance de 0 pour le bruit blanc
     """
     # Création des objets
-    g = Generator()
-    parameters = g.get_parameters()
-    s = Solver()
+    generator = Generator()
+    generator.set_parameters()
+    gen_params = generator.get_parameters()
+
+    gen_data = generator.generate(100, noise=0.1)
+    refused = gen_data["classified"]["rejected"]
+    accepted = gen_data["classified"]["accepted"]
+
+    solver = RelaxedBinarySolver(
+        nb_courses=gen_params["nb_grades"],
+        nb_students=len(accepted) + len(refused),
+    )
 
     # Génération des données d'entraînement et résolution
-    data = g.generate(100, noise_var=0.1)
-    params_returned = s.solve(data["accepted"], data["rejected"])
+    solver_params = solver.solve(accepted, refused)
 
     # Génération des données de test et test
-    res = g.generate(20, noise_var=0.1, raw=True)
-    test_true = res["classified"]
-    classifier_computed = Classifier(**params_returned)
-    test_comp = classifier_computed.classify(res["raw"])
-    compare_results(test_true, test_comp)
+    eval_solver(gen_params=gen_params, solver_params=solver_params, noise=0.1)
 
 
-def test_all():
+def test_rd_params():
     """
     Paramètres random
     """
-    g = Generator()
-    for _ in range(10):
+    generator = Generator()
+    for _ in range(2):
         # Création des objets
-        g.random_parameters()
-        parameters = g.get_parameters()
-        s = Solver()
+        generator = Generator()
+        generator.set_rd_params()
+        gen_params = generator.get_parameters()
+
+        gen_data = generator.generate(100)
+        refused = gen_data["classified"]["rejected"]
+        accepted = gen_data["classified"]["accepted"]
+
+        solver = RelaxedBinarySolver(
+            nb_courses=gen_params["nb_grades"],
+            nb_students=len(accepted) + len(refused),
+        )
 
         # Génération des données d'entraînement et résolution
-        data = g.generate(100)
-        params_returned = s.solve(data)
+        solver_params = solver.solve(accepted, refused)
 
         # Génération des données de test et test
-        res = g.generate(20, raw=True)
-        test_true = res["classified"]
-        classifier_computed = Classifier(**params_returned)
-        test_comp = classifier_computed.classify(res["raw"])
-        compare_results(test_true, test_comp)
+        eval_solver(
+            gen_params=gen_params,
+            solver_params=solver_params,
+        )
 
 
-def test_all():
+def test_noisy_rd_params():
     """
     Paramètres random
     """
-    g = Generator()
-    for _ in range(10):
+    for _ in range(2):
         # Création des objets
-        g.random_parameters()
-        parameters = g.get_parameters()
-        s = Solver()
+        generator = Generator()
+        generator.set_rd_params()
+        gen_params = generator.get_parameters()
+
+        gen_data = generator.generate(100, noise=0.1)
+        refused = gen_data["classified"]["rejected"]
+        accepted = gen_data["classified"]["accepted"]
+
+        solver = RelaxedBinarySolver(
+            nb_courses=gen_params["nb_grades"],
+            nb_students=len(accepted) + len(refused),
+        )
 
         # Génération des données d'entraînement et résolution
-        data = g.generate(100, noise_var=0.1)
-        params_returned = s.solve(data)
+        solver_params = solver.solve(accepted, refused)
 
         # Génération des données de test et test
-        res = g.generate(20, noise_var=0.1, raw=True)
-        test_true = res["classified"]
-        classifier_computed = Classifier(**params_returned)
-        test_comp = classifier_computed.classify(res["raw"])
-        compare_results(test_true, test_comp)
+        eval_solver(gen_params=gen_params, solver_params=solver_params, noise=0.1)

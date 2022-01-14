@@ -12,7 +12,10 @@ class Classifier:
         return self.reset_parameters(**kwargs)
 
     def reset_parameters(
-        self, border: List[int], poids: List[int], lam: float,
+        self,
+        border: List[int],
+        poids: List[int],
+        lam: float,
     ):
         """
         Pour redéfinir les paramètres de génération du modèle
