@@ -4,6 +4,7 @@ from src.mr_sort.generator import Generator
 from src.mr_sort.classifier import Classifier
 from src.mr_sort.binary_solver import BinarySolver
 from src.mr_sort.relaxed_binary_solver import RelaxedBinarySolver
+from pprint import pprint
 
 # def compare_params(real_params, comp_params, ecart: float = 0.1):
 #     """
@@ -22,7 +23,9 @@ from src.mr_sort.relaxed_binary_solver import RelaxedBinarySolver
 #     assert real_params["lam"] - comp_params["lam"] < 0.1 * real_params["lam"]
 
 
-def eval_solver(solver_params, ecart: float = 0.5, noise: Optional[float] = None):
+def eval_solver(
+    gen_params, solver_params, ecart: float = 0.5, noise: Optional[float] = None
+):
     """
     Compare les résultats réels et estimés
     :param real_results: les données générées
@@ -31,30 +34,28 @@ def eval_solver(solver_params, ecart: float = 0.5, noise: Optional[float] = None
     """
     # create new data
     generator = Generator()
-    generator.set_parameters(**solver_params)
-    eval_data = generator.generate(20, noise=noise)
+    generator.set_parameters(**gen_params)
+    eval_data = generator.generate(100, noise=noise)
     true = eval_data["classified"]
-
-    print(solver_params)
 
     classifier_computed = Classifier(**solver_params)
     pred = classifier_computed.classify(eval_data["raw"])
 
     true_accepted = [
-        sorted([mark.round() for mark in student_marks])
+        sorted([mark.round(2) for mark in student_marks])
         for student_marks in true["accepted"]
     ]
     pred_accepted = [
-        sorted([mark.round() for mark in student_marks])
+        sorted([mark.round(2) for mark in student_marks])
         for student_marks in pred["accepted"]
     ]
 
     true_refused = [
-        sorted([mark.round() for mark in student_marks])
+        sorted([mark.round(2) for mark in student_marks])
         for student_marks in true["rejected"]
     ]
     pred_refused = [
-        sorted([mark.round() for mark in student_marks])
+        sorted([mark.round(2) for mark in student_marks])
         for student_marks in pred["rejected"]
     ]
 
@@ -62,9 +63,6 @@ def eval_solver(solver_params, ecart: float = 0.5, noise: Optional[float] = None
     fn = 0
     tp = 0
     tn = 0
-
-    print(pred_accepted)
-    print(true_accepted)
 
     for accepted_student in pred_accepted:
         if accepted_student in true_accepted:
@@ -77,7 +75,10 @@ def eval_solver(solver_params, ecart: float = 0.5, noise: Optional[float] = None
         else:
             fn += 1
 
-    error = (fp + fn) / (tn + fp + tn + fn)
+    error = (fp + fn) / (tp + fp + tn + fn)
+
+    pprint(solver_params)
+    pprint(gen_params)
 
     assert error <= ecart
 
@@ -104,7 +105,7 @@ def test_basic():
     solver_params = solver.solve(accepted, refused)
 
     # Génération des données de test et test
-    eval_solver(solver_params=solver_params)
+    eval_solver(gen_params=gen_params, solver_params=solver_params)
 
 
 def test_noisy():
@@ -129,7 +130,7 @@ def test_noisy():
     solver_params = solver.solve(accepted, refused)
 
     # Génération des données de test et test
-    eval_solver(solver_params=solver_params, noise=0.1)
+    eval_solver(gen_params=gen_params, solver_params=solver_params, noise=0.1)
 
 
 def test_rd_params():
@@ -137,7 +138,7 @@ def test_rd_params():
     Paramètres random
     """
     generator = Generator()
-    for _ in range(10):
+    for _ in range(2):
         # Création des objets
         generator = Generator()
         generator.set_rd_params()
@@ -156,14 +157,17 @@ def test_rd_params():
         solver_params = solver.solve(accepted, refused)
 
         # Génération des données de test et test
-        eval_solver(solver_params=solver_params)
+        eval_solver(
+            gen_params=gen_params,
+            solver_params=solver_params,
+        )
 
 
 def test_noisy_rd_params():
     """
     Paramètres random
     """
-    for _ in range(10):
+    for _ in range(2):
         # Création des objets
         generator = Generator()
         generator.set_rd_params()
@@ -182,4 +186,4 @@ def test_noisy_rd_params():
         solver_params = solver.solve(accepted, refused)
 
         # Génération des données de test et test
-        eval_solver(solver_params=solver_params, noise=0.1)
+        eval_solver(gen_params=gen_params, solver_params=solver_params, noise=0.1)
