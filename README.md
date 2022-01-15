@@ -68,9 +68,9 @@ Ce problème est résolu à l'aide du solveur SAT gophersat.
 
 Les fichiers de codes sont construits similairement pour les deux problèmes (dans le dossier `mr_sort` pour le premier problème et le dossier `ncs` pour le second):
 
-- Le fichier `solver.py` implémente le solveur, une classe avec une méthode _solve_
-- Le fichier `generator.py` implémente un générateur de données sous forme de classe
-- Le fichier `classifier.py` implémente un classifieur de données, selon les paramètres donnés du problème
+- Le fichier `[{}_]solver.py` implémente le solveur, une classe avec une méthode _solve_
+- Le fichier `[{}_]generator.py` implémente un générateur de données sous forme de classe
+- Le fichier `[{}_]classifier.py` implémente un classifieur de données, selon les paramètres donnés du problème
 - Le fichier `{}_test.py` implémente des tests unitaires, sous pytest
 
 D'autres fichiers nécessaires au solveur peuvent être présents.
@@ -91,6 +91,11 @@ Pour lancer le solveur, il faut
 
   ```python
   # Pour MR-Sort
+  s = MulticlassSolver(
+      nb_categories:int = ...,
+      nb_grades:int = ...,
+      nb_students:int = ...,
+  )
 
   # Pour NCS
   s = Solver(
@@ -103,9 +108,7 @@ Pour lancer le solveur, il faut
 - Lancer le solver sur les données désirées:
 
   ```python
-  # Pour MR-Sort
-
-  # Pour NCS
+  # Pour MR-Sort ou NCS
   s.solve(experiences)
   # où experiences est sous la forme {{i: liste d'ensembles de notes qui correpondent à la classe i}}, la classe 0 symbolisant l'absence de classe
   ```
@@ -114,6 +117,11 @@ Pour lancer le solveur, il faut
 
   ```json
   // Pour MR-Sort
+  {
+      "borders": liste des frontières correspondant aux différentes classes,
+      "poids": liste des poids affectés aux notes validées,
+      "lam": facteur d'acceptation de l'élève dans la catégorie
+  }
 
   // Pour NCS
   {
@@ -145,4 +153,4 @@ Les méthodes sont les suivantes:
 - **classify**: pour classifier des données selon les paramètres donnés précédemment
 - **classify_one**: pour classifier un ensemblde de notes (renvoie sa classe)
 
-Pour avoir plus d'info sur ces méthodes, il suffit de lancer la commande `help(Generator)` dans l'interpréteur Python.
+Pour avoir plus d'info sur ces méthodes, il suffit de lancer la commande `help(Classifier)` dans l'interpréteur Python.
