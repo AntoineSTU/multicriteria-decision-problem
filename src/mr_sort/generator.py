@@ -57,7 +57,7 @@ class Generator:
             "lam": self.lam,
         }
 
-    def set_rd_params(self) -> Dict[str, Any]:
+    def random_parameters(self):
         """
         Génère des paramètres de génération des données aléatoires
         :return: None
@@ -76,9 +76,7 @@ class Generator:
         lam = rd.random()
         return self.reset_parameters(max_grade, borders, poids, lam)
 
-    def generate(
-        self, nb_data: int, noise_var: Optional[float] = None, raw: bool = True
-    ) -> Dict[int, List[List[int]]]:
+    def generate(self, nb_data: int, noise_var: float = 0):
         """
         Pour générer nb_data nouvelles données, avec du bruit
         :param nb_data: nombre de données à générer
@@ -88,13 +86,8 @@ class Generator:
         """
         data = np.random.rand(nb_data, self.nb_grades) * self.max_grade
         results = self.classifier.classify(data)
-        if noise_var is not None:
-            classified = {
-                k: [x + np.random.normal(0, noise_var) for x in v]
-                for k, v in results.items()
-            }
-        else:
-            classified = results
-        if raw:
-            return {"raw": data, "classified": classified}
+        classified = {
+            k: [x + np.random.normal(0, noise_var) for x in v]
+            for k, v in results.items()
+        }
         return classified

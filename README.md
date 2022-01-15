@@ -16,6 +16,8 @@ L'objectif de ce cours est de construire des solveurs pour deux problèmes.
 
 Le premier problème est intitulé MR-Sort:
 
+> ### **MR-Sort**
+>
 > **Étant donné:**
 >
 > - un ensemble de classes : $C^0 ... C^p$
@@ -40,6 +42,8 @@ Ce problème est résolu linéairement à l'aide du solveur Gurobi.
 
 Le deuxième problème est intitulé NCS:
 
+> ### **NCS**
+>
 > **Étant donné:**
 >
 > - un ensemble de classes $C^0 ... C^p$

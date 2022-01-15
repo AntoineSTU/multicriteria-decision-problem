@@ -47,3 +47,21 @@ class Classifier:
             data = data[~mask, :]
         results[0] = data
         return results
+
+    def classify_one(self, grades: List[int]) -> int:
+        """
+        To classify elements according to the parameters
+        :param grades: l'ensemble de notes à classer
+        :return: la classe correspondant
+        """
+        grades = np.array(grades)
+        for category in range(self.nb_categories, 0, -1):
+            tot_sum = sum(
+                [
+                    self.poids[j]
+                    for j in list(np.where(grades >= self.borders[category - 1])[0])
+                ]
+            )
+            if tot_sum >= self.lam:
+                return category
+        return 0

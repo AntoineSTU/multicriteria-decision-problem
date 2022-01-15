@@ -1,12 +1,14 @@
-from typing import Dict
+from typing import Dict, Any
 import pytest
-from src.mr_sort.generator import Generator
-from src.mr_sort.classifier import Classifier
-from src.mr_sort.solver import Solver
-from src.mr_sort.relaxed_solver import RelaxedSolver
+from src.mr_sort.binary_generator import BinaryGenerator
+from src.mr_sort.binary_classifier import BinaryClassifier
+from src.mr_sort.binary_solver import BinarySolver
+from src.mr_sort.relaxed_binary_solver import RelaxedBinarySolver
 
 
-def eval_solver(gen_params, solver_params, ecart: float = 0.5):
+def eval_solver(
+    gen_params: Dict[str, Any], solver_params: Dict[str, Any], ecart: float = 0.5
+):
     """
     Compare les résultats réels et estimés
     :param gen_params: les paramètres de génération
@@ -16,15 +18,15 @@ def eval_solver(gen_params, solver_params, ecart: float = 0.5):
     :return: None
     """
     # Generate data
-    g = Generator(
+    g = BinaryGenerator(
         max_grade=gen_params["max_grade"],
-        borders=gen_params["borders"],
+        border=gen_params["border"],
         poids=gen_params["poids"],
         lam=gen_params["lam"],
     )
     data_true_classified = g.generate(20)
-    classifier_solver = Classifier(
-        borders=solver_params["borders"],
+    classifier_solver = BinaryClassifier(
+        border=solver_params["border"],
         poids=solver_params["poids"],
         lam=solver_params["lam"],
     )
@@ -45,26 +47,23 @@ def test_basic():
     Données simples avec variance de 0 pour le bruit blanc
     """
     # Création des objets
-    generator = Generator()
+    generator = BinaryGenerator()
     generator.set_parameters()
     gen_params = generator.get_parameters()
 
     gen_data = generator.generate(100)
-    refused = gen_data["classified"][0]
-    accepted = gen_data["classified"][1]
+    refused = gen_data["rejected"]
+    accepted = gen_data["accepted"]
 
-    solver = Solver(
-        nb_classes=gen_params["nb_classes"],
-        nb_courses=gen_params["nb_grades"],
-        nb_students=len(accepted) + len(refused),
+    solver = BinarySolver(
+        nb_courses=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
     )
 
     # Génération des données d'entraînement et résolution
-    data = generator.generate(100)
-    solver_params = solver.solve(data)
+    solver_params = solver.solve(accepted, refused)
 
     # Génération des données de test et test
-    eval_solver(gen_params=gen_params, solver_params=solver_params)
+    eval_solver(gen_params=gen_params, solver_params=solver_params, ecart=0.2)
 
 
 def test_noisy():
@@ -72,45 +71,41 @@ def test_noisy():
     Données simples avec variance de 0 pour le bruit blanc
     """
     # Création des objets
-    generator = Generator()
+    generator = BinaryGenerator()
     generator.set_parameters()
     gen_params = generator.get_parameters()
 
-    gen_data = generator.generate(100, noise_var=0.1)
-    refused = gen_data["classified"][0]
-    accepted = gen_data["classified"][1]
+    gen_data = generator.generate(100, noise=0.1)
+    refused = gen_data["rejected"]
+    accepted = gen_data["accepted"]
 
-    solver = RelaxedSolver(
-        nb_classes=gen_params["nb_classes"],
-        nb_courses=gen_params["nb_grades"],
-        nb_students=len(accepted) + len(refused),
+    solver = RelaxedBinarySolver(
+        nb_courses=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
     )
 
     # Génération des données d'entraînement et résolution
-    data = generator.generate(100, noise_var=0.1)
-    solver_params = solver.solve(data)
+    solver_params = solver.solve(accepted, refused)
 
     # Génération des données de test et test
-    eval_solver(gen_params=gen_params, solver_params=solver_params, noise_var=0.1)
+    eval_solver(gen_params=gen_params, solver_params=solver_params)
 
 
 def test_rd_params():
     """
     Paramètres random
     """
-    generator = Generator()
+    generator = BinaryGenerator()
     for _ in range(2):
         # Création des objets
-        generator = Generator()
+        generator = BinaryGenerator()
         generator.random_parameters()
         gen_params = generator.get_parameters()
 
         gen_data = generator.generate(100)
-        refused = gen_data["classified"][0]
-        accepted = gen_data["classified"][1]
+        refused = gen_data["rejected"]
+        accepted = gen_data["accepted"]
 
-        solver = RelaxedSolver(
-            nb_classes=gen_params["nb_classes"],
+        solver = RelaxedBinarySolver(
             nb_courses=gen_params["nb_grades"],
             nb_students=len(accepted) + len(refused),
         )
@@ -119,9 +114,7 @@ def test_rd_params():
         solver_params = solver.solve(accepted, refused)
 
         # Génération des données de test et test
-        eval_solver(
-            gen_params=gen_params, solver_params=solver_params,
-        )
+        eval_solver(gen_params=gen_params, solver_params=solver_params)
 
 
 def test_noisy_rd_params():
@@ -130,16 +123,15 @@ def test_noisy_rd_params():
     """
     for _ in range(2):
         # Création des objets
-        generator = Generator()
+        generator = BinaryGenerator()
         generator.random_parameters()
         gen_params = generator.get_parameters()
 
-        gen_data = generator.generate(100, noise_var=0.1)
-        refused = gen_data["classified"][0]
-        accepted = gen_data["classified"][1]
+        gen_data = generator.generate(100, noise=0.1)
+        refused = gen_data["rejected"]
+        accepted = gen_data["accepted"]
 
-        solver = RelaxedSolver(
-            nb_classes=gen_params["nb_classes"],
+        solver = RelaxedBinarySolver(
             nb_courses=gen_params["nb_grades"],
             nb_students=len(accepted) + len(refused),
         )
@@ -148,4 +140,4 @@ def test_noisy_rd_params():
         solver_params = solver.solve(accepted, refused)
 
         # Génération des données de test et test
-        eval_solver(gen_params=gen_params, solver_params=solver_params, noise_var=0.1)
+        eval_solver(gen_params=gen_params, solver_params=solver_params)
