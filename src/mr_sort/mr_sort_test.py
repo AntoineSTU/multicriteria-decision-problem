@@ -2,11 +2,10 @@ from typing import Dict
 import pytest
 from src.mr_sort.generator import Generator
 from src.mr_sort.classifier import Classifier
-from src.mr_sort.solver import Solver
-from src.mr_sort.relaxed_solver import RelaxedSolver
+from src.mr_sort.multiclass_solver import MulticlassSolver
 
 
-def eval_solver(gen_params, solver_params, ecart: float = 0.5):
+def eval_solver(gen_params, solver_params, ecart: float = 0.2):
     """
     Compare les résultats réels et estimés
     :param gen_params: les paramètres de génération
@@ -50,13 +49,11 @@ def test_basic():
     gen_params = generator.get_parameters()
 
     gen_data = generator.generate(100)
-    refused = gen_data["classified"][0]
-    accepted = gen_data["classified"][1]
-
-    solver = Solver(
-        nb_classes=gen_params["nb_classes"],
+    print(gen_params)
+    solver = MulticlassSolver(
+        nb_categories=gen_params["nb_categories"],
         nb_courses=gen_params["nb_grades"],
-        nb_students=len(accepted) + len(refused),
+        nb_students=sum([len(l) for l in gen_data.values()]),
     )
 
     # Génération des données d'entraînement et résolution
@@ -77,13 +74,11 @@ def test_noisy():
     gen_params = generator.get_parameters()
 
     gen_data = generator.generate(100, noise_var=0.1)
-    refused = gen_data["classified"][0]
-    accepted = gen_data["classified"][1]
 
-    solver = RelaxedSolver(
-        nb_classes=gen_params["nb_classes"],
+    solver = MulticlassSolver(
+        nb_categories=gen_params["nb_categories"],
         nb_courses=gen_params["nb_grades"],
-        nb_students=len(accepted) + len(refused),
+        nb_students=sum([len(l) for l in gen_data.values()]),
     )
 
     # Génération des données d'entraînement et résolution
@@ -91,7 +86,7 @@ def test_noisy():
     solver_params = solver.solve(data)
 
     # Génération des données de test et test
-    eval_solver(gen_params=gen_params, solver_params=solver_params, noise_var=0.1)
+    eval_solver(gen_params=gen_params, solver_params=solver_params)
 
 
 def test_rd_params():
@@ -106,17 +101,15 @@ def test_rd_params():
         gen_params = generator.get_parameters()
 
         gen_data = generator.generate(100)
-        refused = gen_data["classified"][0]
-        accepted = gen_data["classified"][1]
 
-        solver = RelaxedSolver(
-            nb_classes=gen_params["nb_classes"],
+        solver = MulticlassSolver(
+            nb_categories=gen_params["nb_categories"],
             nb_courses=gen_params["nb_grades"],
-            nb_students=len(accepted) + len(refused),
+            nb_students=sum([len(l) for l in gen_data.values()]),
         )
 
         # Génération des données d'entraînement et résolution
-        solver_params = solver.solve(accepted, refused)
+        solver_params = solver.solve(gen_data)
 
         # Génération des données de test et test
         eval_solver(
@@ -135,17 +128,15 @@ def test_noisy_rd_params():
         gen_params = generator.get_parameters()
 
         gen_data = generator.generate(100, noise_var=0.1)
-        refused = gen_data["classified"][0]
-        accepted = gen_data["classified"][1]
 
-        solver = RelaxedSolver(
-            nb_classes=gen_params["nb_classes"],
+        solver = MulticlassSolver(
+            nb_categories=gen_params["nb_categories"],
             nb_courses=gen_params["nb_grades"],
-            nb_students=len(accepted) + len(refused),
+            nb_students=sum([len(l) for l in gen_data.values()]),
         )
 
         # Génération des données d'entraînement et résolution
-        solver_params = solver.solve(accepted, refused)
+        solver_params = solver.solve(gen_data)
 
         # Génération des données de test et test
-        eval_solver(gen_params=gen_params, solver_params=solver_params, noise_var=0.1)
+        eval_solver(gen_params=gen_params, solver_params=solver_params)

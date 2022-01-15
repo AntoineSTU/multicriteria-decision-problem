@@ -8,15 +8,14 @@ from src.mr_sort.generator import Generator
 
 class MulticlassSolver:
     """
-    Solver in the case of two categories.
-    Here, the categories are 'Accepted', 'Refused'
-
+    Solver in the case of multiple categories.
     """
 
     def __init__(
         self, nb_courses: int, nb_students: int, nb_categories: int = 2
     ) -> None:
         """Initialize solver"""
+        nb_categories += 1
 
         assert nb_courses >= 1, nb_students >= 1
         assert nb_categories >= 2
@@ -167,7 +166,7 @@ class MulticlassSolver:
 
         return {
             "lam": self.lambda_.X,
-            "border": self.b_i_h.X,
+            "borders": self.b_i_h.X,
             "poids": self.w_i.X,
         }
 
@@ -178,7 +177,9 @@ if __name__ == "__main__":
     NB_DATA = 300
     NB_COURSES = 5
 
-    solver = MulticlassSolver(nb_courses=NB_COURSES, nb_students=NB_DATA, nb_categories=3)
+    solver = MulticlassSolver(
+        nb_courses=NB_COURSES, nb_students=NB_DATA, nb_categories=3
+    )
 
     generator = Generator()
     generator.set_parameters(

@@ -24,6 +24,7 @@ def eval_solver(
         poids=gen_params["poids"],
         lam=gen_params["lam"],
     )
+    print(solver_params)
     data_true_classified = g.generate(20)
     classifier_solver = BinaryClassifier(
         border=solver_params["border"],

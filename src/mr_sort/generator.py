@@ -5,7 +5,7 @@ from src.mr_sort.classifier import Classifier
 
 
 class Generator:
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         """
         Pour initialiser le générateur
         Appelle reset_parameter
@@ -16,6 +16,7 @@ class Generator:
         self.poids = None
         self.lam = None
         self.classifier = None
+        self.set_parameters(**kwargs)
 
     def set_parameters(
         self,
@@ -23,8 +24,6 @@ class Generator:
         borders: List[List[int]] = [[12, 12, 12, 12, 12]],
         poids: List[int] = [1 / 5, 1 / 5, 1 / 5, 1 / 5, 1 / 5],
         lam: float = 0.6,
-        nb_grades=None,
-        nb_categories=None,
     ) -> None:
         """
         Pour redéfinir les paramètres de génération du modèle
@@ -66,7 +65,7 @@ class Generator:
         max_grade = rd.randint(5, 100)
         nb_categories = rd.randint(1, 5)
         borders = []
-        before = [self.max_grade for _ in range(nb_grades)]
+        before = [max_grade for _ in range(nb_grades)]
         for _ in range(nb_categories):
             before = [rd.random() * before[i] for i in range(nb_grades)]
             borders.append(before)
@@ -74,7 +73,7 @@ class Generator:
         total = sum(poids)
         poids = [p / total for p in poids]
         lam = rd.random()
-        return self.reset_parameters(max_grade, borders, poids, lam)
+        return self.set_parameters(max_grade, borders, poids, lam)
 
     def generate(self, nb_data: int, noise_var: float = 0):
         """

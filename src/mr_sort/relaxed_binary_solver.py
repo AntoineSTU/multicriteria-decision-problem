@@ -174,7 +174,7 @@ class RelaxedBinarySolver:
 
             return {
                 "lam": self.lambda_.X,
-                "borders": self.b_i.X,
+                "border": self.b_i.X,
                 "poids": self.w_i.X,
             }
 
