@@ -52,7 +52,7 @@ def test_basic():
     print(gen_params)
     solver = MulticlassSolver(
         nb_categories=gen_params["nb_categories"],
-        nb_courses=gen_params["nb_grades"],
+        nb_grades=gen_params["nb_grades"],
         nb_students=sum([len(l) for l in gen_data.values()]),
     )
 
@@ -77,7 +77,7 @@ def test_noisy():
 
     solver = MulticlassSolver(
         nb_categories=gen_params["nb_categories"],
-        nb_courses=gen_params["nb_grades"],
+        nb_grades=gen_params["nb_grades"],
         nb_students=sum([len(l) for l in gen_data.values()]),
     )
 
@@ -104,7 +104,7 @@ def test_rd_params():
 
         solver = MulticlassSolver(
             nb_categories=gen_params["nb_categories"],
-            nb_courses=gen_params["nb_grades"],
+            nb_grades=gen_params["nb_grades"],
             nb_students=sum([len(l) for l in gen_data.values()]),
         )
 
@@ -131,7 +131,7 @@ def test_noisy_rd_params():
 
         solver = MulticlassSolver(
             nb_categories=gen_params["nb_categories"],
-            nb_courses=gen_params["nb_grades"],
+            nb_grades=gen_params["nb_grades"],
             nb_students=sum([len(l) for l in gen_data.values()]),
         )
 

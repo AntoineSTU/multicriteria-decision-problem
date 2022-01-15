@@ -1,5 +1,4 @@
 from typing import Dict, List
-from unicodedata import category
 import gurobipy as gp
 import logging
 
@@ -12,12 +11,12 @@ class MulticlassSolver:
     """
 
     def __init__(
-        self, nb_courses: int, nb_students: int, nb_categories: int = 2
+        self, nb_grades: int, nb_students: int, nb_categories: int = 2
     ) -> None:
         """Initialize solver"""
         nb_categories += 1
 
-        assert nb_courses >= 1, nb_students >= 1
+        assert nb_grades >= 1, nb_students >= 1
         assert nb_categories >= 2
 
         ####################
@@ -27,7 +26,7 @@ class MulticlassSolver:
         self.large = 100
 
         self.nb_categories = nb_categories
-        self.nb_courses = nb_courses
+        self.nb_grades = nb_grades
         self.nb_students = nb_students
 
         ####################
@@ -41,7 +40,7 @@ class MulticlassSolver:
         ####################################
 
         # weights of courses
-        self.w_i = self.model.addMVar(shape=(nb_courses,), name="weights (nb_courses)")
+        self.w_i = self.model.addMVar(shape=(nb_grades,), name="weights (nb_grades)")
 
         self.lambda_ = self.model.addVar(name="lambda_", lb=0)
 
@@ -54,22 +53,22 @@ class MulticlassSolver:
 
         # continuous delta
         self.c_i_j_h = self.model.addMVar(
-            shape=(self.nb_students, self.nb_categories, self.nb_courses),
-            name="continuous weights (nb_courses, nb_students, nb_categories)",
+            shape=(self.nb_students, self.nb_categories, self.nb_grades),
+            name="continuous weights (nb_grades, nb_students, nb_categories)",
             lb=0,
         )
 
         # boudaries between validated/non-validated courses
         self.b_i_h = self.model.addMVar(
-            shape=(self.nb_categories - 1, self.nb_courses),
-            name="boundaries (nb_courses, nb_categories)",
+            shape=(self.nb_categories - 1, self.nb_grades),
+            name="boundaries (nb_grades, nb_categories)",
         )
 
         # delta
         self.d_i_j_h = self.model.addMVar(
-            shape=(self.nb_students, self.nb_categories, self.nb_courses),
+            shape=(self.nb_students, self.nb_categories, self.nb_grades),
             vtype=gp.GRB.BINARY,
-            name="deltas (nb_courses, nb_students, nb_categories)",
+            name="deltas (nb_grades, nb_students, nb_categories)",
         )
 
         self.model.update()
@@ -83,20 +82,20 @@ class MulticlassSolver:
 
         self.model.addConstrs(
             self.w_i[i] >= self.c_i_j_h[j, h, i]
-            for i in range(self.nb_courses)
+            for i in range(self.nb_grades)
             for j in range(self.nb_students)
             for h in range(self.nb_categories)
         )
 
         self.model.addConstrs(
             self.d_i_j_h[j, h, i] >= self.c_i_j_h[j, h, i]
-            for i in range(self.nb_courses)
+            for i in range(self.nb_grades)
             for j in range(self.nb_students)
             for h in range(self.nb_categories)
         )
         self.model.addConstrs(
             self.c_i_j_h[j, h, i] >= self.d_i_j_h[j, h, i] + self.w_i[i] - 1
-            for i in range(self.nb_courses)
+            for i in range(self.nb_grades)
             for j in range(self.nb_students)
             for h in range(self.nb_categories)
         )
@@ -175,16 +174,14 @@ if __name__ == "__main__":
     import numpy as np
 
     NB_DATA = 300
-    NB_COURSES = 5
+    NB_GRADES = 5
 
-    solver = MulticlassSolver(
-        nb_courses=NB_COURSES, nb_students=NB_DATA, nb_categories=3
-    )
+    solver = MulticlassSolver(nb_grades=NB_GRADES, nb_students=NB_DATA, nb_categories=3)
 
     generator = Generator()
     generator.set_parameters(
         max_grade=20,
-        borders=[[10 for i in range(NB_COURSES)], [16 for i in range(NB_COURSES)]],
+        borders=[[10 for i in range(NB_GRADES)], [16 for i in range(NB_GRADES)]],
     )
 
     data = generator.generate(NB_DATA)
