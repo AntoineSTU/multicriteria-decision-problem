@@ -75,7 +75,7 @@ class Generator:
         lam = rd.random()
         return self.set_parameters(max_grade, borders, poids, lam)
 
-    def generate(self, nb_data: int, noise_var: float = 0):
+    def generate(self, nb_data: int, noise_var: Optional[float] = None):
         """
         Pour générer nb_data nouvelles données, avec du bruit
         :param nb_data: nombre de données à générer
@@ -85,8 +85,9 @@ class Generator:
         """
         data = np.random.rand(nb_data, self.nb_grades) * self.max_grade
         results = self.classifier.classify(data)
-        classified = {
-            k: [x + np.random.normal(0, noise_var) for x in v]
-            for k, v in results.items()
-        }
-        return classified
+        if noise_var is not None:
+            results = {
+                k: [x + np.random.normal(0, noise_var) for x in v]
+                for k, v in results.items()
+            }
+        return results

@@ -2,7 +2,7 @@ import pytest
 from typing import Any, Dict
 from src.ncs.generator import Generator
 from src.ncs.classifier import Classifier
-from src.ncs.solver import Solver
+from src.ncs.solver_relaxed import RelaxedNcsSolver
 
 
 def eval_solver(
@@ -44,7 +44,7 @@ def test_basic():
     # Création des objets
     g = Generator()
     gen_params = g.get_parameters()
-    s = Solver(
+    s = RelaxedNcsSolver(
         nb_categories=1,
         nb_grades=gen_params["nb_grades"],
         max_grade=gen_params["max_grade"],
@@ -67,7 +67,7 @@ def test_all():
         # Création des objets
         g.random_parameters()
         gen_params = g.get_parameters()
-        s = Solver(
+        s = RelaxedNcsSolver(
             nb_categories=gen_params["nb_categories"],
             nb_grades=gen_params["nb_grades"],
             max_grade=gen_params["max_grade"],
@@ -75,6 +75,29 @@ def test_all():
 
         # Génération des données d'entraînement et résolution
         data = g.generate(200)
+        solver_params = s.solve(data)
+
+        # Génération des données de test et test
+        eval_solver(gen_params=gen_params, solver_params=solver_params)
+
+
+def test_all_noise():
+    """
+    Paramètres random
+    """
+    g = Generator()
+    for _ in range(10):
+        # Création des objets
+        g.random_parameters()
+        gen_params = g.get_parameters()
+        s = RelaxedNcsSolver(
+            nb_categories=gen_params["nb_categories"],
+            nb_grades=gen_params["nb_grades"],
+            max_grade=gen_params["max_grade"],
+        )
+
+        # Génération des données d'entraînement et résolution
+        data = g.generate(200, noise_var=1.2)
         solver_params = s.solve(data)
 
         # Génération des données de test et test
