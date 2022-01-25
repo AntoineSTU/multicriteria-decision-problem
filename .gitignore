@@ -4,4 +4,5 @@ __pycache__/
 .pytest_cache
 
 src/ncs/workingfile.cnf
+src/ncs/workingfile_relaxed.wcnf
 src/ncs/gophersat

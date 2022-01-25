@@ -101,10 +101,10 @@ class NcsSolver:
 
         all_clauses = clause_1 + clause_2 + clause_3 + clause_4 + clause_5
         nb_var = len(vars_x) + len(vars_y)
-        dimacs = Solver.__clauses_to_dimacs(all_clauses, nb_var)
+        dimacs = self.__clauses_to_dimacs(all_clauses, nb_var)
 
-        Solver.__write_dimacs_file(dimacs, config.DIMACS_WORKINGFILE_PATH)
-        result = Solver.__exec_gophersat(config.DIMACS_WORKINGFILE_PATH)
+        self.__write_dimacs_file(dimacs, config.DIMACS_WORKINGFILE_PATH)
+        result = self.__exec_gophersat(config.DIMACS_WORKINGFILE_PATH)
         return self.__format_res(result, i2v)
 
     def __format_res(
@@ -132,6 +132,7 @@ class NcsSolver:
                 valid_set.append(var[1])
         return {"borders": border, "valid_set": valid_set}
 
+    @staticmethod
     def __clauses_to_dimacs(clauses: List[List[int]], numvar: int) -> str:
         """
         Pour créer le fichier Dimacs à sauvegarder
@@ -146,6 +147,7 @@ class NcsSolver:
             dimacs += "0\n"
         return dimacs
 
+    @staticmethod
     def __write_dimacs_file(dimacs: str, filename: str) -> None:
         """
         Pour sauvegarder le fichier Dimacs
@@ -156,6 +158,7 @@ class NcsSolver:
         with open(filename, "w", newline="") as cnf:
             cnf.write(dimacs)
 
+    @staticmethod
     def __exec_gophersat(
         filename: str, encoding: str = "utf-8"
     ) -> Tuple[bool, List[int]]:

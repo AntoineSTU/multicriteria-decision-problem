@@ -60,7 +60,6 @@ class Classifier:
             valid_grades = tuple(
                 [x + 1 for x in list(np.where(grades >= self.borders[k - 1])[0])]
             )
-            print(k, valid_grades)
             if valid_grades in self.valid_set:
                 return k
         return 0

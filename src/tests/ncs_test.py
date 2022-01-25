@@ -15,7 +15,6 @@ def eval_solver(
     :param ecart: l'accuracy à vérifier sur les résultats
     :return: None
     """
-    assert False
     # Generate data
     g = Generator(
         max_grade=gen_params["max_grade"],

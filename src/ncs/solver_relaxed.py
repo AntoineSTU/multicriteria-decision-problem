@@ -118,10 +118,10 @@ class RelaxedNcsSolver:
 
         all_clauses = clause_1 + clause_2 + clause_3 + clause_4 + clause_5
         nb_var = len(vars_x) + len(vars_y) + len(vars_z)
-        dimacs = Solver.__clauses_to_dimacs(all_clauses, goals, nb_var)
+        dimacs = self.__clauses_to_dimacs(all_clauses, goals, nb_var)
 
-        Solver.__write_dimacs_file(dimacs, config.DIMACS_WORKINGFILE_PATH_RELAXED)
-        result = Solver.__exec_gophersat(config.DIMACS_WORKINGFILE_PATH_RELAXED)
+        self.__write_dimacs_file(dimacs, config.DIMACS_WORKINGFILE_PATH_RELAXED)
+        result = self.__exec_gophersat(config.DIMACS_WORKINGFILE_PATH_RELAXED)
         return self.__format_res(result, i2v)
 
     def __format_res(
@@ -156,6 +156,7 @@ class RelaxedNcsSolver:
             "discarded_data": discarded_data,
         }
 
+    @staticmethod
     def __clauses_to_dimacs(
         clauses: List[List[int]], goals: List[List[int]], numvar: int
     ) -> str:
@@ -190,6 +191,7 @@ class RelaxedNcsSolver:
             dimacs += "0\n"
         return dimacs
 
+    @staticmethod
     def __write_dimacs_file(dimacs: str, filename: str) -> None:
         """
         Pour sauvegarder le fichier Dimacs
@@ -200,6 +202,7 @@ class RelaxedNcsSolver:
         with open(filename, "w", newline="") as cnf:
             cnf.write(dimacs)
 
+    @staticmethod
     def __exec_gophersat(
         filename: str, encoding: str = "utf-8"
     ) -> Tuple[bool, List[int]]:

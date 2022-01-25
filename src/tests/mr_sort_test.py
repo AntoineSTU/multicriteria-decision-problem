@@ -1,14 +1,11 @@
-from typing import Dict, Any
+from typing import Dict
 import pytest
-from src.mr_sort.binary_generator import BinaryGenerator
-from src.mr_sort.binary_classifier import BinaryClassifier
-from src.mr_sort.binary_solver import BinarySolver
-from src.mr_sort.relaxed_binary_solver import RelaxedBinarySolver
+from src.mr_sort.generator import Generator
+from src.mr_sort.classifier import Classifier
+from src.mr_sort.multiclass_solver import MulticlassSolver
 
 
-def eval_solver(
-    gen_params: Dict[str, Any], solver_params: Dict[str, Any], ecart: float = 0.5
-):
+def eval_solver(gen_params, solver_params, ecart: float = 0.2):
     """
     Compare les résultats réels et estimés
     :param gen_params: les paramètres de génération
@@ -18,16 +15,15 @@ def eval_solver(
     :return: None
     """
     # Generate data
-    g = BinaryGenerator(
+    g = Generator(
         max_grade=gen_params["max_grade"],
-        border=gen_params["border"],
+        borders=gen_params["borders"],
         poids=gen_params["poids"],
         lam=gen_params["lam"],
     )
-    print(solver_params)
     data_true_classified = g.generate(20)
-    classifier_solver = BinaryClassifier(
-        border=solver_params["border"],
+    classifier_solver = Classifier(
+        borders=solver_params["borders"],
         poids=solver_params["poids"],
         lam=solver_params["lam"],
     )
@@ -48,23 +44,23 @@ def test_basic():
     Données simples avec variance de 0 pour le bruit blanc
     """
     # Création des objets
-    generator = BinaryGenerator()
+    generator = Generator()
     generator.set_parameters()
     gen_params = generator.get_parameters()
 
     gen_data = generator.generate(100)
-    refused = gen_data["rejected"]
-    accepted = gen_data["accepted"]
-
-    solver = BinarySolver(
-        nb_grades=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
+    solver = MulticlassSolver(
+        nb_categories=gen_params["nb_categories"],
+        nb_grades=gen_params["nb_grades"],
+        nb_students=sum([len(l) for l in gen_data.values()]),
     )
 
     # Génération des données d'entraînement et résolution
-    solver_params = solver.solve(accepted, refused)
+    data = generator.generate(100)
+    solver_params = solver.solve(data)
 
     # Génération des données de test et test
-    eval_solver(gen_params=gen_params, solver_params=solver_params, ecart=0.2)
+    eval_solver(gen_params=gen_params, solver_params=solver_params)
 
 
 def test_noisy():
@@ -72,20 +68,21 @@ def test_noisy():
     Données simples avec variance de 0 pour le bruit blanc
     """
     # Création des objets
-    generator = BinaryGenerator()
+    generator = Generator()
     generator.set_parameters()
     gen_params = generator.get_parameters()
 
-    gen_data = generator.generate(100, noise=0.1)
-    refused = gen_data["rejected"]
-    accepted = gen_data["accepted"]
+    gen_data = generator.generate(100, noise_var=0.1)
 
-    solver = RelaxedBinarySolver(
-        nb_grades=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
+    solver = MulticlassSolver(
+        nb_categories=gen_params["nb_categories"],
+        nb_grades=gen_params["nb_grades"],
+        nb_students=sum([len(l) for l in gen_data.values()]),
     )
 
     # Génération des données d'entraînement et résolution
-    solver_params = solver.solve(accepted, refused)
+    data = generator.generate(100, noise_var=0.1)
+    solver_params = solver.solve(data)
 
     # Génération des données de test et test
     eval_solver(gen_params=gen_params, solver_params=solver_params)
@@ -95,26 +92,28 @@ def test_rd_params():
     """
     Paramètres random
     """
-    generator = BinaryGenerator()
+    generator = Generator()
     for _ in range(2):
         # Création des objets
-        generator = BinaryGenerator()
+        generator = Generator()
         generator.random_parameters()
         gen_params = generator.get_parameters()
 
         gen_data = generator.generate(100)
-        refused = gen_data["rejected"]
-        accepted = gen_data["accepted"]
 
-        solver = RelaxedBinarySolver(
-            nb_grades=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
+        solver = MulticlassSolver(
+            nb_categories=gen_params["nb_categories"],
+            nb_grades=gen_params["nb_grades"],
+            nb_students=sum([len(l) for l in gen_data.values()]),
         )
 
         # Génération des données d'entraînement et résolution
-        solver_params = solver.solve(accepted, refused)
+        solver_params = solver.solve(gen_data)
 
         # Génération des données de test et test
-        eval_solver(gen_params=gen_params, solver_params=solver_params)
+        eval_solver(
+            gen_params=gen_params, solver_params=solver_params,
+        )
 
 
 def test_noisy_rd_params():
@@ -123,20 +122,20 @@ def test_noisy_rd_params():
     """
     for _ in range(2):
         # Création des objets
-        generator = BinaryGenerator()
+        generator = Generator()
         generator.random_parameters()
         gen_params = generator.get_parameters()
 
-        gen_data = generator.generate(100, noise=0.1)
-        refused = gen_data["rejected"]
-        accepted = gen_data["accepted"]
+        gen_data = generator.generate(100, noise_var=0.1)
 
-        solver = RelaxedBinarySolver(
-            nb_grades=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
+        solver = MulticlassSolver(
+            nb_categories=gen_params["nb_categories"],
+            nb_grades=gen_params["nb_grades"],
+            nb_students=sum([len(l) for l in gen_data.values()]),
         )
 
         # Génération des données d'entraînement et résolution
-        solver_params = solver.solve(accepted, refused)
+        solver_params = solver.solve(gen_data)
 
         # Génération des données de test et test
         eval_solver(gen_params=gen_params, solver_params=solver_params)
