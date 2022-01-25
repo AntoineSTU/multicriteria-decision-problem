@@ -1,8 +1,8 @@
 import pytest
 from typing import Any, Dict
-from src.ncs_relaxed.generator import Generator
-from src.ncs_relaxed.classifier import Classifier
-from src.ncs_relaxed.solver import Solver
+from src.ncs.generator import Generator
+from src.ncs.classifier import Classifier
+from src.ncs.solver import NcsSolver
 
 
 def eval_solver(
@@ -15,6 +15,7 @@ def eval_solver(
     :param ecart: l'accuracy à vérifier sur les résultats
     :return: None
     """
+    assert False
     # Generate data
     g = Generator(
         max_grade=gen_params["max_grade"],
@@ -44,7 +45,7 @@ def test_basic():
     # Création des objets
     g = Generator()
     gen_params = g.get_parameters()
-    s = Solver(
+    s = NcsSolver(
         nb_categories=1,
         nb_grades=gen_params["nb_grades"],
         max_grade=gen_params["max_grade"],
@@ -67,7 +68,7 @@ def test_all():
         # Création des objets
         g.random_parameters()
         gen_params = g.get_parameters()
-        s = Solver(
+        s = NcsSolver(
             nb_categories=gen_params["nb_categories"],
             nb_grades=gen_params["nb_grades"],
             max_grade=gen_params["max_grade"],
