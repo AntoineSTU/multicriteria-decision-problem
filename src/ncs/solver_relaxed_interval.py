@@ -1,10 +1,11 @@
+from src.ncs.generator_interval import IntervalGenerator
 from typing import Any, Dict, List, Tuple
 from itertools import combinations, chain
 import subprocess
 from src import config
 
 
-class NcsSolver:
+class RelaxedIntervalNcsSolver:
     def __init__(self, nb_categories: int, nb_grades: int, max_grade: int):
         """
         Pour initialiser le solver
@@ -40,9 +41,15 @@ class NcsSolver:
             for k in self.Possible_grades
         ]
         vars_y = [("y", tuple(sorted(B))) for B in self.Possible_valid]
+        vars_z = [
+            ("z", (h, n_u))
+            for h in self.Categories + [0]
+            for n_u, _ in enumerate(experiences[h])
+        ]
 
         v2i = {v: i + 1 for i, v in enumerate(vars_x)}  # numérotation qui commence à 1
         v2i.update({v: i + len(vars_x) + 1 for i, v in enumerate(vars_y)})
+        v2i.update({v: i + len(vars_x) + len(vars_y) + 1 for i, v in enumerate(vars_z)})
         i2v = {i: v for v, i in v2i.items()}
 
         ##############################
@@ -51,12 +58,13 @@ class NcsSolver:
 
         # Clause 1
         clause_1 = [
-            [v2i["x", (i, h, kp)], -v2i["x", (i, h, k)]]
+            [v2i["x", (i, h, kp)], -v2i["x", (i, h, k)], -v2i["x", (i, h, kpp)]]
             for i in self.Criteria
             for h in self.Categories
             for k in self.Possible_grades
             for kp in self.Possible_grades
-            if kp > k
+            for kpp in self.Possible_grades
+            if kpp > kp > k
         ]
 
         # Clause 2
@@ -80,19 +88,29 @@ class NcsSolver:
 
         # Clause 4
         clause_4 = [
-            [-v2i["x", (i, h, u[i - 1])] for i in B] + [-v2i["y", tuple(sorted(B))]]
+            [-v2i["x", (i, h, u[i - 1])] for i in B]
+            + [-v2i["y", tuple(sorted(B))]]
+            + [-v2i["z", (h - 1, n_u)]]
             for B in self.Possible_valid
             for h in self.Categories
-            for u in experiences[h - 1]
+            for n_u, u in enumerate(experiences[h - 1])
         ]
 
         # Clause 5
         clause_5 = [
             [v2i["x", (i, h, a[i - 1])] for i in B]
             + [v2i["y", tuple(sorted([i for i in self.Criteria if i not in B]))]]
+            + [-v2i["z", (h, n_a)]]
             for B in self.Possible_valid
             for h in self.Categories
-            for a in experiences[h]
+            for n_a, a in enumerate(experiences[h])
+        ]
+
+        # Goals
+        goals = [
+            [v2i["z", (h, n_u)]]
+            for h in self.Categories + [0]
+            for n_u, _ in enumerate(experiences[h])
         ]
 
         ######################################
@@ -100,11 +118,11 @@ class NcsSolver:
         ######################################
 
         all_clauses = clause_1 + clause_2 + clause_3 + clause_4 + clause_5
-        nb_var = len(vars_x) + len(vars_y)
-        dimacs = self.__clauses_to_dimacs(all_clauses, nb_var)
+        nb_var = len(vars_x) + len(vars_y) + len(vars_z)
+        dimacs = self.__clauses_to_dimacs(all_clauses, goals, nb_var)
 
-        self.__write_dimacs_file(dimacs, config.DIMACS_WORKINGFILE_PATH)
-        result = self.__exec_gophersat(config.DIMACS_WORKINGFILE_PATH)
+        self.__write_dimacs_file(dimacs, config.DIMACS_WORKINGFILE_PATH_RELAXED)
+        result = self.__exec_gophersat(config.DIMACS_WORKINGFILE_PATH_RELAXED)
         return self.__format_res(result, i2v)
 
     def __format_res(
@@ -116,33 +134,65 @@ class NcsSolver:
         :param i2v: pour matcher un numéro avec une variable
         :result: les variables associées avec leur valeur booléenne
         """
-        if not res[0]:
-            return None
         res_vars = {i2v[abs(v)]: v > 0 for v in res[1] if v != 0}
-        border = [[self.max_grade for _ in self.Criteria] for _ in self.Categories]
+        border = [
+            ([self.max_grade for _ in self.Criteria], [0 for _ in self.Criteria])
+            for _ in self.Categories
+        ]
         for var, var_val in res_vars.items():
             if var[0] == "x" and var_val:
                 # Rappel: x sous la forme ("x", (critère, catégorie, note))
-                border[var[1][1] - 1][var[1][0] - 1] = min(
-                    border[var[1][1] - 1][var[1][0] - 1], var[1][2]
+                border[var[1][1] - 1][0][var[1][0] - 1] = min(
+                    border[var[1][1] - 1][0][var[1][0] - 1], var[1][2]
+                )
+                border[var[1][1] - 1][1][var[1][0] - 1] = max(
+                    border[var[1][1] - 1][1][var[1][0] - 1], var[1][2]
                 )
         valid_set = []
         for var, var_val in res_vars.items():
             if var[0] == "y" and var_val:
                 valid_set.append(var[1])
-        return {"borders": border, "valid_set": valid_set}
+        discarded_data = []
+        for var, var_val in res_vars.items():
+            if var[0] == "z" and not var_val:
+                h, n_u = var[1]
+                discarded_data.append((h, n_u))
+        return {
+            "borders": border,
+            "valid_set": valid_set,
+            "discarded_data": discarded_data,
+        }
 
     @staticmethod
-    def __clauses_to_dimacs(clauses: List[List[int]], numvar: int) -> str:
+    def __clauses_to_dimacs(
+        clauses: List[List[int]], goals: List[List[int]], numvar: int
+    ) -> str:
         """
         Pour créer le fichier Dimacs à sauvegarder
         :param clauses: les clauses sous forme normale conjonctive
+        :param goals: les buts sous forme normale conjonctive
         :param numvar: le nombre de variables
+        :param top: le poids des hard clauses
         :return: la transcription en format dimacs
         """
-        dimacs = "c This is it\np cnf " + str(numvar) + " " + str(len(clauses)) + "\n"
+        top = str(len(goals) + 1)
+        dimacs = (
+            "c This is it\np wcnf "
+            + str(numvar)
+            + " "
+            + str(len(clauses))
+            + " "
+            + top
+            + "\n"
+        )
         for clause in clauses:
+            dimacs += top + " "
             for atom in clause:
+                dimacs += str(atom) + " "
+            dimacs += "0\n"
+        for goal in goals:
+            dimacs += "1 "
+            for atom in goal:
                 dimacs += str(atom) + " "
             dimacs += "0\n"
         return dimacs
@@ -171,18 +221,33 @@ class NcsSolver:
         cmd = config.GOPHERSAT_PATH
 
         result = subprocess.run(
-            [cmd, filename], stdout=subprocess.PIPE, check=True, encoding=encoding
+            [cmd, "--verbose", filename],
+            stdout=subprocess.PIPE,
+            check=True,
+            encoding=encoding,
         )
         string = str(result.stdout)
         lines = string.splitlines()
 
-        if lines[1] != "s SATISFIABLE":
-            return False, [], {}
-
-        model = lines[2][2:].split(" ")
+        nb_clauses_unsatisfied = int(lines[-3].split(" ")[1])
+        model = lines[-1][2:].replace("x", "").split(" ")
 
         return (
-            True,
-            [int(x) for x in model if int(x) != 0],
+            nb_clauses_unsatisfied,
+            [int(x) for x in model if x != "" and int(x) != 0],
         )
 
+
+if __name__ == "__main__":
+    g = IntervalGenerator()
+    gen_params = g.get_parameters()
+    s = RelaxedIntervalNcsSolver(
+        nb_categories=1,
+        nb_grades=gen_params["nb_grades"],
+        max_grade=gen_params["max_grade"],
+    )
+
+    # Génération des données d'entraînement et résolution
+    data = g.generate(200)
+    solver_params = s.solve(data)
+    print(solver_params)

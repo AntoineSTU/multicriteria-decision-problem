@@ -1,12 +1,12 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import numpy as np
 import random as rd
 from math import floor
 from itertools import combinations, chain
-from src.ncs_relaxed.classifier import Classifier
+from src.ncs.classifier_interval import IntervalClassifier
 
 
-class Generator:
+class IntervalGenerator:
     def __init__(self, **kwargs):
         """
         Pour initialiser le générateur
@@ -17,7 +17,9 @@ class Generator:
     def reset_parameters(
         self,
         max_grade: float = 20,
-        borders: List[List[int]] = [[12, 12, 12, 12, 12]],
+        borders: List[Tuple[List[int], List[int]]] = [
+            ([8, 8, 8, 8, 8], [12, 12, 12, 12, 12])
+        ],
         valid_set: List[List[int]] = [[1, 3], [2, 4], [1, 2, 5]],
     ):
         """
@@ -29,12 +31,14 @@ class Generator:
         :params valid_set: les ensembles de matières possibles pour valider les catégories
         :return: None
         """
-        self.nb_grades = len(borders[0])
+        self.nb_grades = len(borders[0][0])
         self.max_grade = max_grade
         self.nb_categories = len(borders)
         self.borders = borders
         self.valid_set = valid_set
-        self.classifier = Classifier(borders=self.borders, valid_set=self.valid_set,)
+        self.classifier = IntervalClassifier(
+            borders=self.borders, valid_set=self.valid_set,
+        )
         self.__complete_valid_set()
 
     def get_parameters(self):
@@ -56,13 +60,18 @@ class Generator:
         :return: None
         """
         nb_grades = rd.randint(3, 5)
-        max_grade = rd.randint(5, 100)
+        max_grade = rd.randint(5, 20)
         nb_categories = rd.randint(1, 5)
         borders = []
-        before = [self.max_grade for _ in range(nb_grades)]
+        before_inf = [floor(rd.randint(0, self.max_grade)) for _ in range(nb_grades)]
+        before_sup = before_inf
         for _ in range(nb_categories):
-            before = [floor(rd.randint(0, before[i])) for i in range(nb_grades)]
-            borders.append(before)
+            before_inf = [floor(rd.randint(0, before_inf[i])) for i in range(nb_grades)]
+            before_sup = [
+                floor(rd.randint(before_sup[i], self.max_grade))
+                for i in range(nb_grades)
+            ]
+            borders.append((before_inf, before_sup))
         borders.reverse()
         all_combinations = list(
             chain.from_iterable(

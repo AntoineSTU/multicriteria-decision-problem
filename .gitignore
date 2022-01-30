@@ -8,3 +8,5 @@ src/ncs/gophersat.exe
 src/ncs_relaxed/gophersat.exe
 model.ilp
 src/ncs_relaxed/workingfile.wcnf
+src/ncs/workingfile_relaxed.wcnf
+src/ncs/gophersat

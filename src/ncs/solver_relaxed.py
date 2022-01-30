@@ -1,11 +1,11 @@
-from src.ncs_relaxed.generator import Generator
+from src.ncs.generator import Generator
 from typing import Any, Dict, List, Tuple
 from itertools import combinations, chain
 import subprocess
 from src import config
 
 
-class Solver:
+class RelaxedNcsSolver:
     def __init__(self, nb_categories: int, nb_grades: int, max_grade: int):
         """
         Pour initialiser le solver
@@ -118,10 +118,10 @@ class Solver:
 
         all_clauses = clause_1 + clause_2 + clause_3 + clause_4 + clause_5
         nb_var = len(vars_x) + len(vars_y) + len(vars_z)
-        dimacs = Solver.__clauses_to_dimacs(all_clauses, goals, nb_var)
+        dimacs = self.__clauses_to_dimacs(all_clauses, goals, nb_var)
 
-        Solver.__write_dimacs_file(dimacs, "./src/ncs_relaxed/workingfile.wcnf")
-        result = Solver.__exec_gophersat("./src/ncs_relaxed/workingfile.wcnf")
+        self.__write_dimacs_file(dimacs, config.DIMACS_WORKINGFILE_PATH_RELAXED)
+        result = self.__exec_gophersat(config.DIMACS_WORKINGFILE_PATH_RELAXED)
         return self.__format_res(result, i2v)
 
     def __format_res(
@@ -156,6 +156,7 @@ class Solver:
             "discarded_data": discarded_data,
         }
 
+    @staticmethod
     def __clauses_to_dimacs(
         clauses: List[List[int]], goals: List[List[int]], numvar: int
     ) -> str:
@@ -190,6 +191,7 @@ class Solver:
             dimacs += "0\n"
         return dimacs
 
+    @staticmethod
     def __write_dimacs_file(dimacs: str, filename: str) -> None:
         """
         Pour sauvegarder le fichier Dimacs
@@ -200,6 +202,7 @@ class Solver:
         with open(filename, "w", newline="") as cnf:
             cnf.write(dimacs)
 
+    @staticmethod
     def __exec_gophersat(
         filename: str, encoding: str = "utf-8"
     ) -> Tuple[bool, List[int]]:
@@ -232,7 +235,7 @@ class Solver:
 if __name__ == "__main__":
     g = Generator()
     gen_params = g.get_parameters()
-    s = Solver(
+    s = RelaxedNcsSolver(
         nb_categories=1,
         nb_grades=gen_params["nb_grades"],
         max_grade=gen_params["max_grade"],

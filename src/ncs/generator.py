@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import numpy as np
 import random as rd
 from math import floor
@@ -47,7 +47,7 @@ class Generator:
             "max_grade": self.max_grade,
             "nb_categories": self.nb_categories,
             "borders": np.array(self.borders),
-            "valid_set": np.array(self.valid_set),
+            "valid_set": np.array(self.valid_set, dtype=object),
         }
 
     def random_parameters(self):
@@ -73,7 +73,7 @@ class Generator:
         valid_set = rd.sample(all_combinations, rd.randint(1, 4))
         return self.reset_parameters(max_grade, borders, valid_set)
 
-    def generate(self, nb_data: int):
+    def generate(self, nb_data: int, noise_var: Optional[float] = None):
         """
         Pour générer nb_data nouvelles données, avec du bruit
         :param nb_data: nombre de données à générer
@@ -84,8 +84,20 @@ class Generator:
         data = to_int_vect(
             np.random.rand(nb_data, self.nb_grades) * (self.max_grade + 1)
         )
-        classified = self.classifier.classify(data)
-        return classified
+        results = self.classifier.classify(data)
+        if noise_var is not None:
+            results = {
+                k: [
+                    np.clip(
+                        np.floor(x + np.random.normal(0, noise_var)).astype(int),
+                        0,
+                        self.max_grade,
+                    )
+                    for x in v
+                ]
+                for k, v in results.items()
+            }
+        return results
 
     def __complete_valid_set(self):
         """

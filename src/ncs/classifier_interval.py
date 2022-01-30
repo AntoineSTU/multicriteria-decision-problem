@@ -1,9 +1,9 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from itertools import combinations, chain
 import numpy as np
 
 
-class Classifier:
+class IntervalClassifier:
     def __init__(self, **kwargs):
         """
         Pour initialiser le générateur
@@ -13,7 +13,9 @@ class Classifier:
 
     def reset_parameters(
         self,
-        borders: List[List[int]] = [[12, 12, 12, 12, 12]],
+        borders: List[Tuple[List[int], List[int]]] = [
+            ([8, 8, 8, 8, 8], [12, 12, 12, 12, 12])
+        ],
         valid_set: List[List[int]] = [[1, 3], [2, 4], [1, 2, 5]],
     ):
         """
@@ -22,7 +24,7 @@ class Classifier:
         :params valid_set: les ensembles de matières possibles pour valider les catégories
         :return: None
         """
-        self.nb_grades = len(borders[0])
+        self.nb_grades = len(borders[0][0])
         self.nb_categories = len(borders)
         self.borders = borders
         self.valid_set = valid_set
@@ -38,7 +40,9 @@ class Classifier:
         results = {}
         for k in range(self.nb_categories, 0, -1):
             res_k = []
-            for i, row in enumerate(data >= self.borders[k - 1]):
+            conditions_sup = data <= self.borders[k - 1][1]
+            conditions_inf = self.borders[k - 1][0] <= data
+            for i, row in enumerate(conditions_inf & conditions_sup):
                 valid_grades = tuple([x + 1 for x in list(np.where(row)[0])])
                 if valid_grades in self.valid_set:
                     res_k.append(i)
@@ -57,10 +61,12 @@ class Classifier:
         """
         grades = np.array(grades)
         for k in range(self.nb_categories, 0, -1):
-            valid_grades = tuple(
-                [x + 1 for x in list(np.where(grades >= self.borders[k - 1])[0])]
-            )
-            print(k, valid_grades)
+            valid_grades = []
+            conditions_sup = grades <= self.borders[k - 1][1]
+            conditions_inf = self.borders[k - 1][0] <= grades
+            for x in list(np.where(conditions_inf & conditions_sup)[0]):
+                valid_grades.append(x + 1)
+            valid_grades = tuple(valid_grades)
             if valid_grades in self.valid_set:
                 return k
         return 0

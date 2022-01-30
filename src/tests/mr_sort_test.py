@@ -49,7 +49,6 @@ def test_basic():
     gen_params = generator.get_parameters()
 
     gen_data = generator.generate(100)
-    print(gen_params)
     solver = MulticlassSolver(
         nb_categories=gen_params["nb_categories"],
         nb_grades=gen_params["nb_grades"],
