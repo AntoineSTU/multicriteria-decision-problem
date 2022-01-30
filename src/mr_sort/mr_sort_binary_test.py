@@ -24,7 +24,6 @@ def eval_solver(
         poids=gen_params["poids"],
         lam=gen_params["lam"],
     )
-    print(solver_params)
     data_true_classified = g.generate(20)
     classifier_solver = BinaryClassifier(
         border=solver_params["border"],
@@ -57,7 +56,8 @@ def test_basic():
     accepted = gen_data["accepted"]
 
     solver = BinarySolver(
-        nb_grades=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
+        nb_grades=gen_params["nb_grades"],
+        nb_students=len(accepted) + len(refused),
     )
 
     # Génération des données d'entraînement et résolution
@@ -81,7 +81,8 @@ def test_noisy():
     accepted = gen_data["accepted"]
 
     solver = RelaxedBinarySolver(
-        nb_grades=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
+        nb_grades=gen_params["nb_grades"],
+        nb_students=len(accepted) + len(refused),
     )
 
     # Génération des données d'entraînement et résolution
@@ -107,7 +108,8 @@ def test_rd_params():
         accepted = gen_data["accepted"]
 
         solver = RelaxedBinarySolver(
-            nb_grades=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
+            nb_grades=gen_params["nb_grades"],
+            nb_students=len(accepted) + len(refused),
         )
 
         # Génération des données d'entraînement et résolution
@@ -132,7 +134,8 @@ def test_noisy_rd_params():
         accepted = gen_data["accepted"]
 
         solver = RelaxedBinarySolver(
-            nb_grades=gen_params["nb_grades"], nb_students=len(accepted) + len(refused),
+            nb_grades=gen_params["nb_grades"],
+            nb_students=len(accepted) + len(refused),
         )
 
         # Génération des données d'entraînement et résolution
