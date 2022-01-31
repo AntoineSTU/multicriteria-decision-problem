@@ -191,25 +191,25 @@ Pour lancer le solveur, il faut
 
 - Les résultats sont sous la forme:
 
-  ```json
-  // Pour MR-Sort
+  ```python
+  # Pour MR-Sort
   {
-      "borders": liste des frontières correspondant aux différentes classes,
-      "poids": liste des poids affectés aux notes validées,
-      "lam": facteur d'acceptation de l'élève dans la catégorie
+      "borders": # liste des frontières correspondant aux différentes classes,
+      "poids": # liste des poids affectés aux notes validées,
+      "lam": # facteur d'acceptation de l'élève dans la catégorie
   }
 
-  // Pour NCS rigide
+  # Pour NCS rigide
   {
-      "borders": liste des frontières correspondant aux différentes classes,
-      "valid_set": liste des ensembles de matières acceptés pour entrer dans une catégorie
+      "borders": # liste des frontières correspondant aux différentes classes,
+      "valid_set": # liste des ensembles de matières acceptés pour entrer dans une catégorie
   }
 
-  // Pour NCS relaxé
+  # Pour NCS relaxé
   {
-      "borders": liste des frontières correspondant aux différentes classes (sous forme de liste pour NCS basique et de couple de liste pour NCS avec intervalles),
-      "valid_set": liste des ensembles de matières acceptés pour entrer dans une catégorie,
-      "discarded_data": liste des étudiants non pris en compte
+      "borders": # liste des frontières correspondant aux différentes classes (sous forme de liste pour NCS basique et de couple de liste pour NCS avec intervalles),
+      "valid_set": # liste des ensembles de matières acceptés pour entrer dans une catégorie,
+      "discarded_data": # liste des étudiants non pris en compte
   }
   ```
 
