@@ -1,4 +1,4 @@
-from src.ncs.generator_interval import IntervalGenerator
+from src.ncs.interval_generator import IntervalGenerator
 from typing import Any, Dict, List, Tuple
 from itertools import combinations, chain
 import subprocess

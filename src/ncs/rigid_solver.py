@@ -4,7 +4,7 @@ import subprocess
 from src import config
 
 
-class NcsSolver:
+class RigidNcsSolver:
     def __init__(self, nb_categories: int, nb_grades: int, max_grade: int):
         """
         Pour initialiser le solver

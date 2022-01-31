@@ -3,7 +3,7 @@ import numpy as np
 import random as rd
 from math import floor
 from itertools import combinations, chain
-from src.ncs.classifier_interval import IntervalClassifier
+from src.ncs.interval_classifier import IntervalClassifier
 
 
 class IntervalGenerator:
