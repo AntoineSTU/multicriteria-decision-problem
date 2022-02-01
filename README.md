@@ -97,7 +97,9 @@ Ces problèmes sont résolus à l'aide du solveur SAT gophersat.
 │
 ├── .gitignore
 │
-└── requirements.txt
+├── requirements.txt
+│
+└── Rapport.pdf        <- Le rapport du projet
 ```
 
 Les fichiers de codes sont construits similairement pour les deux problèmes (dans le dossier `mr_sort` pour le premier problème et le dossier `ncs` pour le second):
