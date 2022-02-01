@@ -3,7 +3,6 @@ import gurobipy as gp
 import logging
 
 
-
 class MulticlassSolver:
     """
     Solver in the case of multiple categories.

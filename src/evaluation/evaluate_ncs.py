@@ -203,12 +203,58 @@ def compare_time_num_students():
     plt.show()
 
 
+def compare_time_lambda():
+    """Compares dataset size"""
+    num_category = 2
+    num_students = 200
+    num_courses = 5
+    students = [i for i in range(500) if i > 10]
+    x = []
+    y = []
+    for i in range(1, 10):
+        lam = max(0.5, i / 10)
+
+        start_time = time.time()
+
+        generator = Generator()
+
+        generator.reset_parameters(
+            max_grade=20,
+            borders=[
+                [j * 20 / num_category for _ in range(num_courses)]
+                for j in range(num_category)
+            ],
+            lam=lam,
+        )
+
+        data = generator.generate(num_students)
+
+        solver = NcsSolver(nb_grades=num_courses, nb_categories=2, max_grade=20)
+
+        solver.solve(data)
+
+        x.append(lam)
+        y.append(time.time() - start_time)
+
+    plt.xlabel("Value of lambda")
+    plt.ylabel("Time taken (seconds)")
+
+    plt.legend(
+        loc="lower right",
+        title="Execution time depending on lambda parameter",
+        frameon=False,
+    )
+    plt.plot(x, y)
+
+    plt.show()
+
+
 def compare_time_num_categories():
     """Compares dataset size"""
     num_category = 2
     num_courses = 5
     num_students = 200
-    num_categories = [i for i in range(50) if i >= 2]
+    num_categories = [i for i in range(100) if i >= 2]
     x = []
     y = []
     for num_category in tqdm(num_categories, total=len(num_categories)):
@@ -296,6 +342,52 @@ def compare_time_num_grades():
     plt.show()
 
 
+def compare_time_max_grade():
+    """Compares dataset size"""
+    num_category = 2
+    num_courses = 5
+    max_grades = [20 + i * 10 for i in range(30)]
+    num_students = 200
+    x = []
+    y = []
+    for max_grade in tqdm(max_grades, total=len(max_grades)):
+
+        start_time = time.time()
+
+        generator = Generator()
+
+        generator.reset_parameters(
+            max_grade=max_grade,
+            borders=[
+                [j * 20 / num_category for _ in range(num_courses)]
+                for j in range(num_category)
+            ],
+        )
+
+        data = generator.generate(num_students)
+
+        solver = NcsSolver(
+            nb_grades=num_courses, nb_categories=num_category, max_grade=max_grade
+        )
+
+        solver.solve(data)
+
+        x.append(max_grade)
+        y.append(time.time() - start_time)
+
+    plt.xlabel("Maximum grade")
+    plt.ylabel("Time taken (seconds)")
+
+    plt.legend(
+        loc="upper left",
+        title="Execution time depending on maximum grade.",
+        frameon=False,
+    )
+    plt.plot(x, y)
+
+    plt.show()
+
+
 def get_matrix_conf():
     """Compares dataset size"""
     num_grades = 5
@@ -333,4 +425,6 @@ if __name__ == "__main__":
     # compare_time_num_students()
     # compare_time_num_categories()
     # compare_time_num_grades()
-    get_matrix_conf()
+    # get_matrix_conf()
+    # compare_time_num_categories()
+    compare_time_lambda()

@@ -223,7 +223,7 @@ def compare_time_num_categories():
     """Compares dataset size"""
     num_categories = [2, 3, 4, 5, 6]
     num_students = 50
-    num_grades = 10
+    num_grades = 5
 
     x = []
     y = []
@@ -271,7 +271,7 @@ def compare_time_num_grades():
     """Compares dataset size"""
     num_category = 3
     num_students = 50
-    num_grades = 10
+    num_grades = 5
     ggra = [2, 3, 4, 5, 6, 7]
 
     x = []
@@ -318,7 +318,7 @@ def compare_time_num_grades():
 
 def compare_on_num_categories():
     """Compares dataset size"""
-    num_categories = [2, 3, 4]
+    num_categories = [2]
 
     num_grades = 10
 
@@ -328,7 +328,7 @@ def compare_on_num_categories():
         x = []
         y = []
 
-        for num_students in tqdm([10, 25, 40, 60, 80]):
+        for num_students in tqdm([100]):
 
             generator = Generator()
 
@@ -341,7 +341,7 @@ def compare_on_num_categories():
                 poids=[1 / num_grades for _ in range(num_grades)],
             )
 
-            data = generator.generate(num_students)
+            data = generator.generate(num_students, noise_var=2)
 
             true_params = generator.get_parameters()
 
@@ -370,7 +370,7 @@ def confusion_matrix_mr_sort():
     """Compares dataset size"""
     num_grades = 5
     num_students = 200
-    num_categories = 4
+    num_categories = 1
 
     start = time.time()
 
@@ -379,14 +379,16 @@ def confusion_matrix_mr_sort():
     generator.set_parameters(
         max_grade=20,
         borders=[
-            [j * 20 / num_categories for _ in range(num_grades)]
-            for j in range(num_categories)
+            [12 / num_categories for _ in range(num_grades)]
+            # for j in range(num_categories)
         ],
         poids=[1.0 / num_grades for _ in range(num_grades)],
     )
     true_params = generator.get_parameters()
 
-    data = generator.generate(num_students)
+    data = generator.generate(
+        num_students,
+    )
 
     solver = MulticlassSolver(
         nb_grades=num_grades, nb_categories=num_categories, nb_students=num_students
@@ -400,12 +402,12 @@ def confusion_matrix_mr_sort():
 
 
 if __name__ == "__main__":
-    pass
 
     # compare_time_num_categories()
     # compare_time_num_grades()
 
     # compare_on_num_courses()
-    compare_on_num_categories()
+    # confusion_matrix_mr_sort()
+    compare_time_num_categories()
 
     # confusion_matrix_mr_sort() # ok
