@@ -34,7 +34,7 @@ Le premier problème est intitulé MR-Sort:
 >
 > **On définit:**
 >
-> $u\in [0,N]^n$ est dans la classe $C^h$ ssi $\sum_{\{i\in \llbracket 0,N\rrbracket /u_i \geq b^h_i\}} w_i \geq > \lambda$ et $\sum_{\{i\in \llbracket 0,N\rrbracket /u_i \geq b^{h+1}_i\}} w_i < \lambda$
+> $u\in [0,N]^n$ est dans la classe $C^h$ ssi $\sum_{\{i\in \llbracket 0,N\rrbracket /u_i \geq b^h_i\}} w_i \geq \lambda$ et $\sum_{\{i\in \llbracket 0,N\rrbracket /u_i \geq b^{h+1}_i\}} w_i < \lambda$
 
 Ce problème est résolu linéairement à l'aide du solveur Gurobi.
 
