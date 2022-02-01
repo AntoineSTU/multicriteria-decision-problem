@@ -1,8 +1,8 @@
 import pytest
 from typing import Any, Dict
-from src.ncs.generator_interval import IntervalGenerator
-from src.ncs.classifier_interval import IntervalClassifier
-from src.ncs.solver_relaxed_interval import RelaxedIntervalNcsSolver
+from src.ncs.interval_generator import IntervalGenerator
+from src.ncs.interval_classifier import IntervalClassifier
+from src.ncs.relaxed_intervals_solver import RelaxedIntervalNcsSolver
 
 
 def eval_solver(

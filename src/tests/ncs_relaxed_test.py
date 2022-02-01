@@ -2,7 +2,7 @@ import pytest
 from typing import Any, Dict
 from src.ncs.generator import Generator
 from src.ncs.classifier import Classifier
-from src.ncs.solver_relaxed import RelaxedNcsSolver
+from src.ncs.relaxed_solver import RelaxedNcsSolver
 
 
 def eval_solver(
