@@ -192,3 +192,27 @@ class BinarySolver:
         else:
             logging.warning("Model status code: %s", self.model.status)
             raise ValueError("Model didn't find optimal solution.")
+
+
+if __name__ == "__main__":
+    from src.mr_sort.binary_generator import BinaryGenerator
+    from src.mr_sort.evaluators import eval_binary_solver
+
+    MAX_NUM_GRADES = 5
+    MAX_NUM_STUDENTS = 500
+
+    for num_students in range(10, MAX_NUM_STUDENTS, 20):
+
+        generator = BinaryGenerator()
+
+        data = generator.generate(
+            nb_data=num_students,
+        )
+
+        true_params = generator.get_parameters()
+
+        solver = BinarySolver(nb_grades=MAX_NUM_GRADES, nb_students=num_students)
+
+        result = solver.solve(data["accepted"], data["rejected"])
+
+        print(num_students, eval_binary_solver(true_params, result))
