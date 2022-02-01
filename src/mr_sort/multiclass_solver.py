@@ -2,8 +2,6 @@ from typing import Dict, List
 import gurobipy as gp
 import logging
 
-from src.mr_sort.generator import Generator
-
 
 class MulticlassSolver:
     """
@@ -168,24 +166,3 @@ class MulticlassSolver:
             "borders": self.b_i_h.X,
             "poids": self.w_i.X,
         }
-
-
-if __name__ == "__main__":
-    import numpy as np
-
-    NB_DATA = 300
-    NB_GRADES = 5
-
-    solver = MulticlassSolver(nb_grades=NB_GRADES, nb_students=NB_DATA, nb_categories=3)
-
-    generator = Generator()
-    generator.set_parameters(
-        max_grade=20,
-        borders=[[10 for i in range(NB_GRADES)], [16 for i in range(NB_GRADES)]],
-    )
-
-    data = generator.generate(NB_DATA)
-
-    params = solver.solve(data)
-
-    print(params)
